@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <script src="theme-init.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mind Square | Chess Academy & Engine</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon-precomposed.png">
+    <link rel="dns-prefetch" href="https://accounts.google.com" />
+    <link rel="stylesheet" href="vendor/fonts/fonts.css" />
+    <link rel="stylesheet" href="tailwind.built.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="theme.css" />
+
+    <!-- Self-hosted dependencies (no third-party script CDNs) -->
+    <script src="vendor/gsap.min.js"></script>
+    <script src="vendor/ScrollTrigger.min.js"></script>
+    <script src="vendor/chess.min.js"></script>
+    <script src="vendor/three.min.js"></script>
+    <script src="vendor/OrbitControls.js"></script>
+    <script src="vendor/jspdf.umd.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body
+    class="bg-background text-on-background font-body-md selection:bg-secondary selection:text-on-secondary transition-all pl-64">
+
+    <!-- ── Compact 3D Chess Loader Overlay ──────────────────────── -->
+    <div id="chess-loader-overlay" role="status" aria-live="polite" aria-label="Loading">
+        <div class="loader-card">
+            <div id="chess-3d-loader-canvas"></div>
+            <div class="loader-hud">
+                <span id="chess-loader-label">LOADING.....</span>
+                <div class="loader-progress-container">
+                    <div class="loader-progress-bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header
+        class="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 w-full fixed top-0 left-0 right-0 z-50 bg-surface/70 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+        <div class="flex items-center gap-3">
+
+            <div class="flex items-center gap-2 cursor-pointer" data-nav="landing">
+                <img id="header-logo-img" src="images/logo.png" alt="Mind Square Logo"
+                    class="w-auto object-contain transition-all duration-300" />
+            </div>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-8" id="navbar-links">
+            <a class="font-body-md text-primary font-bold transition-all hover:text-secondary cursor-pointer"
+                data-nav="landing">Academy</a>
+            <a class="font-body-md text-on-surface-variant transition-all hover:text-secondary cursor-pointer"
+                data-nav="classes">Classes</a>
+            <a class="font-body-md text-on-surface-variant transition-all hover:text-secondary cursor-pointer"
+                data-nav="tournaments">Tournaments</a>
+            <a class="font-body-md text-on-surface-variant transition-all hover:text-secondary cursor-pointer"
+                data-nav="leaderboard">Leaderboard</a>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle" data-action="toggleTheme"
+                class="w-10 h-10 flex items-center justify-center rounded-full glass-card border border-outline-variant/30 text-on-surface-variant hover:text-secondary transition-all cursor-pointer"
+                title="Toggle Light/Dark Theme">
+                <!-- Inline SVG: sun/light_mode icon — critical above-the-fold element -->
+                <svg id="theme-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" aria-hidden="true"
+                    style="animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+            </button>
+
+            <button id="navbar-login-btn" data-action="openLoginModal"
+                class="flex items-center gap-2 px-5 py-2 border border-secondary text-secondary hover:bg-secondary hover:text-on-secondary rounded-full font-bold transition-all duration-200 shadow-md">
+                <span class="material-symbols-outlined text-sm">login</span>
+                Sign In
+            </button>
+
+            <div id="navbar-user-profile" class="hidden relative group">
+                <button data-action="toggleProfileDropdown" id="navbar-profile-btn"
+                    class="flex items-center gap-2 py-1.5 px-3 rounded-full hover:bg-surface-variant border border-outline-variant/30 transition-all">
+                    <img id="navbar-avatar" class="w-8 h-8 rounded-full border border-secondary bg-surface-container"
+                        src="" />
+                    <span id="navbar-user-name-txt"
+                        class="font-bold text-sm text-on-surface max-w-[100px] truncate">Student</span>
+                    <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                </button>
+                <div id="navbar-profile-dropdown"
+                    class="absolute right-0 top-full mt-2 w-56 rounded-xl glass-card border border-outline-variant/50 p-2 hidden z-50">
+                    <div class="px-4 py-2 border-b border-outline-variant/30 text-left">
+                        <span class="text-xs text-secondary font-bold block uppercase tracking-wider">Chess
+                            Student</span>
+                    </div>
+                    <button data-nav="dashboard"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg mt-1 transition-all">
+                        <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
+                    </button>
+                    <button data-nav="chess"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">chess</span> Arena (2D/3D)
+                    </button>
+                    <button data-nav="puzzles"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">extension</span> Tactics Trainer
+                    </button>
+                    <button data-nav="vision-trainer"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">gps_fixed</span> Coordinates Trainer
+                    </button>
+                    <button data-nav="openings"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">menu_book</span> Openings Explorer
+                    </button>
+                    <button data-nav="endgame-trainer"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">hotel_class</span> Endgame Trainer
+                    </button>
+                    <button data-nav="classes"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">groups</span> Online Classes
+                    </button>
+                    <button data-nav="tournaments"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-on-surface hover:bg-surface-variant rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">emoji_events</span> Tournaments
+                    </button>
+                    <div class="border-t border-outline-variant/30 my-1"></div>
+                    <button data-action="logoutUser"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-lg">logout</span> Sign Out
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Sidebar backdrop overlay -->
+    <div id="sidebar-backdrop" data-action="toggleSidebar"
+        class="hidden fixed inset-0 top-16 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300 opacity-0">
+    </div>
+
+    <nav
+        class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-surface-container/95 backdrop-blur-md border-r border-outline-variant/30 flex flex-col py-8 z-40 shadow-2xl">
+        <div class="flex flex-col flex-1 space-y-2 px-4">
+            <a data-nav="landing" class="sidebar-link">
+                <span class="material-symbols-outlined">school</span>
+                <span class="font-body-md font-semibold">Academy</span>
+            </a>
+            <a data-nav="dashboard" class="sidebar-link">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="font-body-md font-semibold">Dashboard</span>
+            </a>
+            <a data-nav="chess" class="sidebar-link">
+                <span class="material-symbols-outlined">chess</span>
+                <span class="font-body-md font-semibold">Play Arena</span>
+            </a>
+            <a data-nav="puzzles" class="sidebar-link">
+                <span class="material-symbols-outlined">extension</span>
+                <span class="font-body-md font-semibold">Tactics Trainer</span>
+            </a>
+            <a data-nav="vision-trainer" class="sidebar-link">
+                <span class="material-symbols-outlined">gps_fixed</span>
+                <span class="font-body-md font-semibold">Vision Trainer</span>
+            </a>
+            <a data-nav="openings" class="sidebar-link">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span class="font-body-md font-semibold">Openings Explorer</span>
+            </a>
+            <a data-nav="endgame-trainer" class="sidebar-link">
+                <span class="material-symbols-outlined">hotel_class</span>
+                <span class="font-body-md font-semibold">Endgame Trainer</span>
+            </a>
+            <a data-nav="classes" class="sidebar-link">
+                <span class="material-symbols-outlined">groups</span>
+                <span class="font-body-md font-semibold">Online Classes</span>
+            </a>
+            <a data-nav="tournaments" class="sidebar-link">
+                <span class="material-symbols-outlined">emoji_events</span>
+                <span class="font-body-md font-semibold">Tournaments</span>
+            </a>
+            <a data-nav="leaderboard" class="sidebar-link">
+                <span class="material-symbols-outlined">leaderboard</span>
+                <span class="font-body-md font-semibold">Scorecard</span>
+            </a>
+            <a data-nav="puzzle-creator" id="sidebar-puzzle-creator-link" class="sidebar-link hidden">
+                <span class="material-symbols-outlined text-secondary">edit_square</span>
+                <span class="font-body-md font-semibold text-secondary">Puzzle Creator</span>
+            </a>
+        </div>
+
+        <div class="mt-auto px-6 pb-6">
+            <button data-nav="chess"
+                class="w-full py-3 bg-secondary text-on-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/10 hover:shadow-secondary/20 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">play_arrow</span>
+                Start Arena Game
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================== -->
+    <!-- BOOK A DEMO CLASS MODAL -->
+    <!-- ============================================== -->
+    <div id="demo-modal-overlay" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
+        style="display:none; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);"
+        data-action="closeDemoModalOutside">
+        <div id="demo-modal-box"
+            class="relative w-full max-w-lg bg-surface-container rounded-3xl border border-outline-variant/40 shadow-2xl overflow-hidden"
+            data-action="stopPropagation">
+
+            <!-- Decorative gradient strip -->
+            <div class="h-1 w-full bg-gradient-to-r from-secondary via-primary to-secondary"></div>
+
+            <!-- Modal Header -->
+            <div class="p-8 pb-4">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-secondary font-bold text-xs uppercase tracking-widest block mb-1">Free
+                            Session</span>
+                        <h2 class="font-display-lg text-2xl font-extrabold text-on-surface">Book a Demo Class</h2>
+                        <p class="text-on-surface-variant text-xs mt-1">Fill in your details and we'll reach out to you
+                            via WhatsApp to confirm your free 1-hour session.</p>
+                    </div>
+                    <button data-action="closeDemoModal"
+                        class="ml-4 flex-shrink-0 w-9 h-9 rounded-full bg-surface-variant hover:bg-outline-variant/50 flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined text-on-surface-variant text-lg">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="demo-class-form" class="px-8 pb-8 space-y-4">
+
+                <!-- Name -->
+                <div class="space-y-1">
+                    <label for="demo-name"
+                        class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Full Name <span
+                            class="text-red-400">*</span></label>
+                    <div
+                        class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/40 rounded-xl px-4 py-3 focus-within:border-secondary transition-colors">
+                        <span class="material-symbols-outlined text-secondary text-base">person</span>
+                        <input id="demo-name" name="demo-name" type="text" required placeholder="e.g. Arjun Sharma"
+                            class="bg-transparent text-on-surface placeholder-on-surface-variant/50 text-sm w-full focus:outline-none" />
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="space-y-1">
+                    <label for="demo-email"
+                        class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Email Address <span
+                            class="text-red-400">*</span></label>
+                    <div
+                        class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/40 rounded-xl px-4 py-3 focus-within:border-secondary transition-colors">
+                        <span class="material-symbols-outlined text-secondary text-base">mail</span>
+                        <input id="demo-email" name="demo-email" type="email" required
+                            placeholder="e.g. arjun@email.com"
+                            class="bg-transparent text-on-surface placeholder-on-surface-variant/50 text-sm w-full focus:outline-none" />
+                    </div>
+                </div>
+
+                <!-- Skill Level + Age row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Skill Level -->
+                    <div class="space-y-1">
+                        <label for="demo-level"
+                            class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Skill Level <span
+                                class="text-red-400">*</span></label>
+                        <div
+                            class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/40 rounded-xl px-4 py-3 focus-within:border-secondary transition-colors">
+                            <span class="material-symbols-outlined text-secondary text-base">signal_cellular_alt</span>
+                            <select id="demo-level" name="demo-level" required
+                                class="bg-transparent text-on-surface text-sm w-full focus:outline-none cursor-pointer appearance-none">
+                                <option value="" disabled selected>Select level</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Age -->
+                    <div class="space-y-1">
+                        <label for="demo-age"
+                            class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Age <span
+                                class="text-red-400">*</span></label>
+                        <div
+                            class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/40 rounded-xl px-4 py-3 focus-within:border-secondary transition-colors">
+                            <span class="material-symbols-outlined text-secondary text-base">cake</span>
+                            <input id="demo-age" name="demo-age" type="number" min="4" max="100" required
+                                placeholder="Your age"
+                                class="bg-transparent text-on-surface placeholder-on-surface-variant/50 text-sm w-full focus:outline-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message -->
+                <div class="space-y-1">
+                    <label for="demo-message"
+                        class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Message / Comments
+                        <span class="text-on-surface-variant/50">(Optional)</span></label>
+                    <div
+                        class="flex items-start gap-2 bg-surface-container-high border border-outline-variant/40 rounded-xl px-4 py-3 focus-within:border-secondary transition-colors">
+                        <span class="material-symbols-outlined text-secondary text-base mt-0.5">chat_bubble</span>
+                        <textarea id="demo-message" name="demo-message" rows="3"
+                            placeholder="Any goals, questions or special requests for your demo class..."
+                            class="bg-transparent text-on-surface placeholder-on-surface-variant/50 text-sm w-full focus:outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit"
+                    class="w-full py-4 font-extrabold text-sm rounded-2xl shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-3 mt-2 bg-[#25D366] hover:bg-[#1DA851] text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="#ffffff" viewBox="0 0 24 24">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                    Send via WhatsApp
+                </button>
+
+                <p class="text-center text-xs text-on-surface-variant/60">Your message will be sent to our coach via
+                    WhatsApp. We'll confirm your slot within 24 hours.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE SPA VIEWS CONTAINER -->
+    <main class="relative z-10">
+
+        <!-- 1. LANDING/ACADEMY TAB -->
+        <div id="landing-page" class="fade-in">
+            <!-- Hero Section -->
+            <section
+                class="relative min-h-screen flex flex-col items-center justify-center pt-24 overflow-hidden chess-grid-bg">
+                <div class="absolute inset-0 z-0 bg-gradient-to-b from-background via-transparent to-background"></div>
+                <div
+                    class="container-max mx-auto px-margin-mobile md:px-margin-desktop relative z-10 flex flex-col items-center text-center">
+                    <h1 class="font-display-lg text-[48px] md:text-[80px] leading-[1.0] mb-6 max-w-4xl tracking-tight">
+                        Squares with <span class="italic text-secondary">Freedom</span> of Mind
+                    </h1>
+                    <p class="font-body-lg text-on-surface-variant max-w-2xl mb-12 text-sm md:text-lg">
+                        Where intellectual heritage meets high-performance engineering. Join the elite coaching academy
+                        for dedicated students seeking grandmaster mastery.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 mb-20">
+                        <button data-action="openLoginModal"
+                            class="px-8 py-4 bg-primary text-on-primary font-bold rounded-full hover:scale-105 duration-150 transition-all shadow-xl shadow-primary/10 flex items-center justify-center gap-2 guest-only">
+                            <span class="material-symbols-outlined">school</span>
+                            Join the Academy
+                        </button>
+                        <button data-nav="leaderboard"
+                            class="px-8 py-4 border border-outline-variant text-on-surface font-bold rounded-full hover:bg-surface-variant transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">leaderboard</span>
+                            View Academy Leaderboard
+                        </button>
+                    </div>
+                    <!-- Interactive Hero 3D Chess Board Placeholder -->
+                    <div class="relative w-full max-w-4xl aspect-video glass-card rounded-2xl overflow-hidden border border-outline-variant/35 glow-accent group cursor-pointer"
+                        data-nav="chess">
+                        <img class="w-full h-full object-cover mix-blend-luminosity opacity-40 group-hover:opacity-60 transition-opacity duration-700"
+                            alt="A highly detailed chess piece of obsidian King"
+                            src="https://images.unsplash.com/photo-1529699211952-734e80c4d42b?auto=format&fit=crop&q=80&w=1200" />
+
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div
+                                class="w-24 h-24 border-2 border-secondary rounded-full flex items-center justify-center scan-ring-animation bg-secondary/5">
+                                <span class="material-symbols-outlined text-4xl text-secondary animate-pulse"
+                                    style="font-variation-settings: 'FILL' 1;">token</span>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 flex items-center gap-4 text-left">
+                            <div
+                                class="flex flex-col bg-background/80 backdrop-blur-md p-4 rounded-xl border border-outline-variant/20">
+                                <span class="font-label-sm text-secondary uppercase text-[10px]">Live Arena
+                                    Engine</span>
+                                <span class="font-body-md text-on-surface text-sm">Play 2D and 3D with Stockfish level
+                                    AI</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Bento Grid -->
+            <section class="py-32 px-margin-mobile md:px-margin-desktop bg-surface-container-lowest">
+                <div class="max-w-container-max mx-auto">
+                    <div class="mb-20 text-center md:text-left">
+                        <span class="text-secondary font-bold text-xs uppercase tracking-widest block mb-2">Exclusive
+                            Curriculum</span>
+                        <h3 class="font-display-lg text-headline-lg text-primary">Academy Infrastructure</h3>
+                        <div class="h-1 w-24 bg-secondary mt-3"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+                        <!-- Feature: Coaching -->
+                        <div
+                            class="md:col-span-7 group relative overflow-hidden rounded-2xl bg-surface-container border border-outline-variant/30 p-10 min-h-[450px] flex flex-col justify-between">
+                            <div class="relative z-10">
+                                <span
+                                    class="material-symbols-outlined text-secondary text-5xl mb-6">workspace_premium</span>
+                                <h4 class="font-display-lg text-3xl font-bold mb-4">Elite Coaching</h4>
+                                <p class="font-body-md text-on-surface-variant max-w-md text-sm leading-relaxed">
+                                    One-hour premium coaching sessions matching advanced fighters and students. Classes
+                                    categorized dynamically from raw beginners to absolute Grandmasters.
+                                </p>
+                            </div>
+                            <div class="relative z-10 flex flex-wrap gap-2 mt-8">
+                                <span
+                                    class="px-3 py-1 bg-surface-variant text-on-surface-variant border border-outline-variant rounded-full text-xs font-semibold">Beginner</span>
+                                <span
+                                    class="px-3 py-1 bg-surface-variant text-on-surface-variant border border-outline-variant rounded-full text-xs font-semibold">Basic</span>
+                                <span
+                                    class="px-3 py-1 bg-surface-variant text-on-surface-variant border border-outline-variant rounded-full text-xs font-semibold">Intermediate</span>
+                                <span
+                                    class="px-3 py-1 bg-surface-variant text-on-surface-variant border border-outline-variant rounded-full text-xs font-semibold">Super
+                                    Intermediate</span>
+                                <span
+                                    class="px-3 py-1 bg-surface-variant text-on-surface-variant border border-outline-variant rounded-full text-xs font-semibold">Advanced</span>
+                                <span
+                                    class="px-3 py-1 bg-surface-variant text-on-surface-variant border border-outline-variant rounded-full text-xs font-semibold">Super
+                                    Advanced</span>
+                            </div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80 z-0">
+                            </div>
+                        </div>
+
+                        <!-- Feature: Tournaments -->
+                        <div
+                            class="md:col-span-5 group relative overflow-hidden rounded-2xl bg-surface-container border border-outline-variant/30 p-10 min-h-[450px] flex flex-col justify-between cursor-pointer hover:border-secondary/45 transition-colors duration-300"
+                            data-nav="tournaments">
+                            <div class="relative z-10">
+                                <span class="material-symbols-outlined text-secondary text-5xl mb-6">emoji_events</span>
+                                <h4 class="font-display-lg text-3xl font-bold mb-4">Tournaments</h4>
+                                <p class="font-body-md text-on-surface-variant text-sm leading-relaxed">
+                                    Compete in rated Swiss and Arena matches. Build win streaks, climb the scorecard, and claim the championship trophy.
+                                </p>
+                            </div>
+                            <div class="relative z-10 mt-8 flex justify-center h-40 items-center">
+                                <div class="w-32 h-32 relative [perspective:800px] flex items-center justify-center">
+                                    <!-- 3D Rotating Stage -->
+                                    <div class="w-full h-full absolute flex items-center justify-center animate-spin-3d">
+                                        <!-- Front Shield -->
+                                        <div class="absolute w-20 h-24 bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg border border-yellow-400/40 [backface-visibility:hidden] [transform:translateZ(30px)]">
+                                            <span class="material-symbols-outlined text-5xl text-on-secondary drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] animate-pulse">emoji_events</span>
+                                        </div>
+                                        <!-- Back Shield -->
+                                        <div class="absolute w-20 h-24 bg-gradient-to-br from-amber-600 via-yellow-500 to-amber-300 rounded-xl flex items-center justify-center shadow-lg border border-yellow-400/40 [backface-visibility:hidden] [transform:translateZ(-30px)_rotateY(180deg)]">
+                                            <span class="material-symbols-outlined text-5xl text-on-secondary drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] animate-pulse">emoji_events</span>
+                                        </div>
+                                        <!-- Left connector -->
+                                        <div class="absolute w-[60px] h-24 bg-gradient-to-b from-yellow-600 to-yellow-800 [backface-visibility:hidden] [transform:translateX(-10px)_rotateY(90deg)] opacity-60"></div>
+                                        <!-- Right connector -->
+                                        <div class="absolute w-[60px] h-24 bg-gradient-to-b from-yellow-600 to-yellow-800 [backface-visibility:hidden] [transform:translateX(10px)_rotateY(-90deg)] opacity-60"></div>
+                                        <!-- Floating Ring 1 -->
+                                        <div class="absolute w-28 h-28 border border-dashed border-secondary/40 rounded-full [transform:rotateX(90deg)_translateZ(40px)] animate-pulse"></div>
+                                        <!-- Floating Ring 2 -->
+                                        <div class="absolute w-28 h-28 border border-dashed border-secondary/40 rounded-full [transform:rotateX(90deg)_translateZ(-40px)] animate-pulse"></div>
+                                    </div>
+                                    <!-- Base Platform shadow -->
+                                    <div class="absolute bottom-2 w-24 h-4 bg-secondary/20 blur-sm rounded-full [transform:rotateX(75deg)]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature: Dual Engine -->
+                        <div
+                            class="md:col-span-12 group relative overflow-hidden rounded-2xl bg-surface-container border border-outline-variant/30 p-10 flex flex-col md:flex-row gap-12 items-center">
+                            <div class="md:w-1/2">
+                                <span class="material-symbols-outlined text-secondary text-5xl mb-6">memory</span>
+                                <h4 class="font-display-lg text-3xl font-bold mb-4">2D/3D Hybrid Game Arena</h4>
+                                <p
+                                    class="font-body-md text-on-surface-variant mb-8 text-sm leading-relaxed font-body-md">
+                                    Test your analytical thinking. Seamlessly toggle between a streamlined flat 2D board
+                                    and a cinematic 3D perspective with detailed lighting and metallic textures.
+                                </p>
+                                <div class="flex gap-4">
+                                    <button data-nav="chess"
+                                        class="px-6 py-2.5 bg-secondary text-on-secondary rounded-full text-xs font-bold transition-all shadow-md">Play
+                                        Arena Game</button>
+                                </div>
+                            </div>
+                            <div
+                                class="md:w-1/2 w-full aspect-video rounded-xl overflow-hidden border border-outline-variant/40">
+                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 mix-blend-luminosity"
+                                    alt="Splitted 2D and 3D chess pieces"
+                                    src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&q=80&w=800" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Book a Demo CTA Section (Academy/Landing Page) -->
+            <section
+                class="py-24 bg-surface-container-lowest border-t border-outline-variant/20 relative overflow-hidden">
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none">
+                </div>
+                <div
+                    class="container-max mx-auto px-margin-mobile md:px-margin-desktop max-w-4xl text-center relative z-10">
+                    <span class="text-secondary font-bold text-xs uppercase tracking-widest block mb-3">Free
+                        Trial</span>
+                    <h3 class="font-display-lg text-[36px] md:text-[48px] font-extrabold mb-4 leading-tight">
+                        Experience the Academy &mdash; <span class="italic text-secondary">For Free</span>
+                    </h3>
+                    <p class="font-body-md text-on-surface-variant text-sm max-w-xl mx-auto mb-10">
+                        Not sure where to start? Book a free 1-hour demo class with our FIDE-rated head coach and
+                        discover your chess potential firsthand.
+                    </p>
+                    <button data-action="openDemoModal" id="demo-btn-academy"
+                        class="inline-flex items-center gap-3 px-10 py-4 bg-secondary text-on-secondary font-extrabold text-base rounded-full shadow-xl shadow-secondary/20 hover:bg-secondary/90 hover:scale-105 transition-all duration-200">
+                        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">school</span>
+                        Book a Free Demo Class
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </button>
+
+                    <!-- Feature Highlights -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-14">
+                        <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 text-left">
+                            <span class="material-symbols-outlined text-secondary text-3xl mb-3 block"
+                                style="font-variation-settings:'FILL' 1">timer</span>
+                            <h4 class="font-bold text-on-surface text-base mb-1">1-Hour Live Session</h4>
+                            <p class="text-xs text-on-surface-variant">A complete interactive class with real board
+                                positions, analysis, and personalized feedback.</p>
+                        </div>
+                        <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 text-left">
+                            <span class="material-symbols-outlined text-secondary text-3xl mb-3 block"
+                                style="font-variation-settings:'FILL' 1">emoji_events</span>
+                            <h4 class="font-bold text-on-surface text-base mb-1">FIDE-Rated Coach</h4>
+                            <p class="text-xs text-on-surface-variant">Learn directly from an internationally rated
+                                chess player with 5+ years of coaching experience.</p>
+                        </div>
+                        <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 text-left">
+                            <span class="material-symbols-outlined text-secondary text-3xl mb-3 block"
+                                style="font-variation-settings:'FILL' 1">diversity_3</span>
+                            <h4 class="font-bold text-on-surface text-base mb-1">All Skill Levels</h4>
+                            <p class="text-xs text-on-surface-variant">Whether you're a complete beginner or an
+                                intermediate player &mdash; there's a place for you here.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="py-32 bg-background relative overflow-hidden border-y border-outline-variant/20 guest-only">
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-secondary/5 rounded-full blur-[120px]">
+                </div>
+                <div class="container-max mx-auto px-margin-mobile text-center relative z-10">
+                    <h3 class="font-display-lg text-[40px] md:text-[56px] mb-4">Ready to master the square?</h3>
+                    <p class="text-on-surface-variant text-md max-w-xl mx-auto mb-10">Secure your profile in the global
+                        leaderboard and access biometric attendance gates.</p>
+
+                    <div class="flex flex-col items-center justify-center gap-6">
+                        <!-- Google Sign in render box -->
+                        <div id="google-login-btn-cta"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Instructor Profile Section -->
+            <section class="py-24 bg-surface-container/30 border-t border-outline-variant/20 relative overflow-hidden">
+                <div class="container-max mx-auto px-margin-mobile md:px-margin-desktop max-w-5xl">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+
+                        <!-- Coach Image Column -->
+                        <div class="md:col-span-5 flex justify-center">
+                            <div
+                                class="relative group max-w-sm w-full aspect-[4/5] rounded-2xl overflow-hidden border-2 border-secondary/35 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:border-secondary">
+                                <img src="images/coach.jpg" alt="Head Coach Portrait"
+                                    class="w-full h-full object-cover" />
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent opacity-80">
+                                </div>
+                                <div
+                                    class="absolute bottom-4 left-4 right-4 bg-background/85 backdrop-blur-md rounded-xl p-3 border border-outline-variant/30 text-center">
+                                    <span class="text-xs uppercase tracking-widest font-black text-secondary">Head
+                                        Coach</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coach Bio Column -->
+                        <div class="md:col-span-7 space-y-6 text-left">
+                            <span
+                                class="px-3 py-1 rounded-full text-xs font-bold bg-secondary/15 text-secondary border border-secondary/25">Faculty
+                                Profile</span>
+                            <h3
+                                class="font-display-lg text-3xl md:text-4xl font-extrabold text-on-surface leading-tight">
+                                Meet Our Head Coach
+                            </h3>
+                            <p class="font-body-md text-on-surface-variant text-sm leading-relaxed">
+                                Our training programs are designed and directed by an active **International FIDE Chess
+                                Player** and professional educator. With a deep passion for pedagogical excellence and
+                                chess mastery, our head coach has dedicated his career to nurturing strategic minds.
+                            </p>
+                            <p class="font-body-md text-on-surface-variant text-sm leading-relaxed">
+                                Over the last **5 years in coaching**, he has mentored and trained more than **1,000
+                                students** globally—helping aspiring players transition from absolute beginners into
+                                competitive, rated tournament fighters. Currently, he guides a select elite group of
+                                **58 active students** at the Mind Square Chess Academy, helping each player unlock
+                                their absolute chess potential.
+                            </p>
+
+                            <!-- Stats Badges -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+                                <div
+                                    class="bg-background/60 border border-outline-variant/30 rounded-xl p-4 text-center">
+                                    <span class="text-2xl font-black text-secondary block">5+</span>
+                                    <span class="text-[10px] text-on-surface-variant uppercase tracking-wider">Years
+                                        Coaching</span>
+                                </div>
+                                <div
+                                    class="bg-background/60 border border-outline-variant/30 rounded-xl p-4 text-center">
+                                    <span class="text-2xl font-black text-secondary block">FIDE</span>
+                                    <span class="text-[10px] text-on-surface-variant uppercase tracking-wider">Rated
+                                        Player</span>
+                                </div>
+                                <div
+                                    class="bg-background/60 border border-outline-variant/30 rounded-xl p-4 text-center">
+                                    <span class="text-2xl font-black text-secondary block">1k+</span>
+                                    <span class="text-[10px] text-on-surface-variant uppercase tracking-wider">Students
+                                        Taught</span>
+                                </div>
+                                <div
+                                    class="bg-background/60 border border-outline-variant/30 rounded-xl p-4 text-center">
+                                    <span class="text-2xl font-black text-secondary block">58</span>
+                                    <span class="text-[10px] text-on-surface-variant uppercase tracking-wider">Active
+                                        Cohort</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- Footer -->
+            <footer
+                class="flex flex-col items-center justify-center space-y-4 w-full py-12 bg-surface-container-lowest border-t border-outline-variant/20 text-center">
+                <div class="font-display-lg text-3xl font-bold text-secondary">Mind Square</div>
+                <div class="flex flex-wrap justify-center gap-6 text-sm">
+                    <a class="font-label-sm text-on-surface-variant hover:text-secondary transition-colors"
+                        href="#">Curriculum</a>
+                    <a class="font-label-sm text-on-surface-variant hover:text-secondary transition-colors"
+                        href="#">Fighters</a>
+                    <a class="font-label-sm text-on-surface-variant hover:text-secondary transition-colors"
+                        href="#">Badges</a>
+                    <a class="font-label-sm text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"
+                        data-action="showPrivacyModal">Privacy Policy</a>
+                    <a class="font-label-sm text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"
+                        data-action="showDataDeletionModal">Data Deletion Request</a>
+                </div>
+                <p class="text-xs text-on-surface-variant mt-4">© 2020 Mind Square Chess Academy. Squares with
+                    freedom of mind.</p>
+            </footer>
+        </div>
+
+
+        <!-- ============================================== -->
+        <!-- 2. STUDENT DASHBOARD TAB -->
+        <!-- ============================================== -->
+        <div id="dashboard-page"
+            class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- Left Details: Student Card & Badges -->
+                <div class="lg:col-span-8 space-y-8">
+                    <!-- Profile Hero Banner -->
+                    <div
+                        class="glass-card rounded-2xl p-8 border border-outline-variant/30 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-secondary/5 rounded-full blur-2xl">
+                        </div>
+                        <div id="dash-user-avatar-wrapper"
+                            class="relative group cursor-pointer w-24 h-24 rounded-2xl overflow-hidden border-2 border-secondary shadow-lg shrink-0">
+                            <img id="dash-user-avatar" class="w-full h-full bg-surface-variant object-cover" src="" />
+                            <div id="dash-change-avatar-overlay"
+                                data-action="triggerAvatarFileInput"
+                                class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-200">
+                                <span class="material-symbols-outlined text-white text-xl">photo_camera</span>
+                                <span
+                                    class="text-[9px] text-white/90 font-bold uppercase tracking-wider mt-1">Change</span>
+                            </div>
+                            <input type="file" id="avatar-file-input" class="hidden" accept="image/*"
+                                aria-label="Upload profile picture" />
+                        </div>
+
+                        <div class="text-center md:text-left flex-1">
+                            <div class="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-2">
+                                <h3 id="dash-user-name" class="font-display-lg text-3xl font-bold text-on-surface">
+                                    Student Name</h3>
+                                <button id="dash-edit-name-btn" data-action="editDisplayName"
+                                    class="text-on-surface-variant hover:text-secondary cursor-pointer transition-all p-1 flex items-center justify-center rounded-lg hover:bg-surface-variant"
+                                    title="Edit Display Name">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                </button>
+                                <button id="dash-back-my-profile-btn" data-action="viewStudentProfile" data-arg="null"
+                                    class="hidden px-3 py-1 bg-secondary/20 hover:bg-secondary/30 text-secondary text-xs font-bold rounded-full transition-all flex items-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-xs">arrow_back</span> Back to My Profile
+                                </button>
+                                <span id="dash-user-category"
+                                    class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary/20 text-secondary border border-secondary/20">Intermediate</span>
+                                <span id="dash-study-streak"
+                                    class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/20">🔥 0 day streak</span>
+                            </div>
+                            <p id="dash-user-email" class="text-sm text-on-surface-variant mb-4 font-mono"></p>
+
+                            <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+                                <div
+                                    class="bg-background/50 border border-outline-variant/30 rounded-xl px-4 py-2 text-center min-w-[90px]">
+                                    <span
+                                        class="text-[10px] text-on-surface-variant uppercase tracking-wider block">Rank</span>
+                                    <span id="dash-user-rank" class="text-lg font-bold text-secondary">#0</span>
+                                </div>
+                                <div
+                                    class="bg-background/50 border border-outline-variant/30 rounded-xl px-4 py-2 text-center min-w-[90px]">
+                                    <span
+                                        class="text-[10px] text-on-surface-variant uppercase tracking-wider block">Score</span>
+                                    <span id="dash-user-points" class="text-lg font-bold text-primary">0 pts</span>
+                                </div>
+                                <div
+                                    class="bg-background/50 border border-outline-variant/30 rounded-xl px-4 py-2 text-center min-w-[90px]">
+                                    <span class="text-[10px] text-on-surface-variant uppercase tracking-wider block">Win
+                                        Ratio</span>
+                                    <span id="dash-win-ratio" class="text-lg font-bold text-emerald-400">0%</span>
+                                </div>
+                            </div>
+
+                            <!-- Action buttons -->
+                            <div class="flex flex-wrap gap-2 mt-4 justify-center md:justify-start">
+                                <button data-action="downloadProgressReport" id="dash-download-report-btn"
+                                    class="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-xs font-bold transition-all shadow hover:scale-105">
+                                    <span class="material-symbols-outlined text-sm">download</span> Download Report
+                                </button>
+                                <button data-action="initLiveChallenge" id="live-challenge-btn"
+                                    class="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-xs font-bold transition-all shadow hover:scale-105">
+                                    <span class="material-symbols-outlined text-sm">swords</span> Live Challenge
+                                </button>
+                            </div>
+
+                            <!-- Live Challenge invite banner -->
+                            <div id="live-challenge-invite-banner"
+                                class="hidden mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-on-surface">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Telemetry Card -->
+                    <div
+                        class="glass-card rounded-2xl p-8 border border-outline-variant/30 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- ELO progression circle -->
+                        <div class="flex flex-col items-center text-center">
+                            <span class="text-xs text-on-surface-variant uppercase tracking-wider font-bold mb-4">ELO
+                                Level Progression</span>
+                            <div class="relative w-36 h-36">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle class="text-outline-variant/20 stroke-current" stroke-width="6"
+                                        fill="transparent" r="40" cx="50" cy="50" />
+                                    <circle id="dash-elo-progress" class="text-secondary stroke-current"
+                                        stroke-width="6" stroke-linecap="round" fill="transparent" r="40" cx="50"
+                                        cy="50" style="stroke-dasharray: 251.2; stroke-dashoffset: 251.2;" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="dash-elo-level-txt"
+                                        class="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Level
+                                        1</span>
+                                    <span id="dash-elo-progress-pct" class="text-xl font-bold text-on-surface">0%</span>
+                                </div>
+                            </div>
+                            <span id="dash-elo-progress-footer"
+                                class="text-xs text-on-surface-variant mt-4">Calculations loading...</span>
+                        </div>
+
+                        <!-- Win Ratio speedo -->
+                        <div class="flex flex-col items-center text-center">
+                            <span
+                                class="text-xs text-on-surface-variant uppercase tracking-wider font-bold mb-4">Win/Loss
+                                Performance</span>
+                            <div class="relative w-36 h-20 overflow-hidden">
+                                <svg class="w-full h-36 transform -rotate-180" viewBox="0 0 100 100">
+                                    <circle class="text-outline-variant/20 stroke-current" stroke-width="6"
+                                        fill="transparent" r="40" cx="50" cy="50"
+                                        style="stroke-dasharray: 251.2; stroke-dashoffset: 125.6;" />
+                                    <circle id="dash-win-gauge" class="text-emerald-400 stroke-current" stroke-width="6"
+                                        stroke-linecap="round" fill="transparent" r="40" cx="50" cy="50"
+                                        style="stroke-dasharray: 251.2; stroke-dashoffset: 251.2;" />
+                                </svg>
+                                <div class="absolute bottom-0 inset-x-0 flex flex-col items-center justify-center">
+                                    <span id="dash-win-ratio-txt" class="text-2xl font-bold text-on-surface">0%</span>
+                                    <span
+                                        class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Win
+                                        Ratio</span>
+                                </div>
+                            </div>
+                            <span id="dash-win-ratio-footer" class="text-xs text-on-surface-variant mt-4">Games
+                                loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Tactics Heatmap & Motif Radar Card -->
+                    <div class="glass-card rounded-2xl p-8 border border-outline-variant/30 space-y-8">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-display-lg text-xl font-bold text-secondary flex items-center gap-2">
+                                <span class="material-symbols-outlined">analytics</span> Tactics Performance Stats
+                            </h4>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- SVG Radar Chart breakdown by Motif -->
+                            <div class="flex flex-col items-center text-center">
+                                <span
+                                    class="text-xs text-on-surface-variant uppercase tracking-wider font-bold mb-4">Tactics
+                                    Strength Radar</span>
+                                <div class="w-full h-48 flex items-center justify-center">
+                                    <svg id="tactics-radar-chart" class="w-full h-full max-w-[200px]"
+                                        viewBox="-110 -110 220 220">
+                                        <!-- Dynamic elements injected in app.js -->
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Motif Stats Table -->
+                            <div class="flex flex-col justify-center">
+                                <span
+                                    class="text-xs text-on-surface-variant uppercase tracking-wider font-bold mb-4 text-left">Motif
+                                    Accuracy</span>
+                                <div id="tactics-motif-list" class="space-y-2 text-xs w-full">
+                                    <!-- Dynamic list injected in app.js -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GitHub style heatmap calendar grid -->
+                        <div class="pt-6 border-t border-outline-variant/20 flex flex-col items-center">
+                            <div class="flex justify-between w-full items-center mb-4">
+                                <span class="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Tactics
+                                    Activity Heatmap</span>
+                                <span id="heatmap-streak-txt" class="text-xs text-secondary font-bold">0 day
+                                    streak</span>
+                            </div>
+                            <div class="w-full overflow-x-auto pb-2 scrollbar-thin">
+                                <div class="min-w-[620px] flex justify-center">
+                                    <svg id="tactics-heatmap-svg" class="w-full max-w-[640px]" height="110"
+                                        viewBox="0 0 620 110">
+                                        <!-- Dynamic cells injected in app.js -->
+                                    </svg>
+                                </div>
+                            </div>
+                            <div
+                                class="flex justify-end w-full gap-2 items-center text-[10px] text-on-surface-variant mt-2">
+                                <span>Less</span>
+                                <span class="w-2.5 h-2.5 bg-surface-container-high rounded-sm"></span>
+                                <span class="w-2.5 h-2.5 bg-emerald-500/35 rounded-sm"></span>
+                                <span class="w-2.5 h-2.5 bg-emerald-500/60 rounded-sm"></span>
+                                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></span>
+                                <span>More</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Badges Grid -->
+                    <div class="glass-card rounded-2xl p-8 border border-outline-variant/30">
+                        <div class="flex items-center justify-between mb-6">
+                            <h4 class="font-display-lg text-xl font-bold text-secondary flex items-center gap-2">
+                                <span class="material-symbols-outlined">shield</span> Earned Academy Badges
+                            </h4>
+                            <span class="text-xs text-on-surface-variant">Perform in games to unlock</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="dash-badges-container">
+                            <!-- Injected dynamically in app.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Details: Attendance & Upcoming Schedule -->
+                <div class="lg:col-span-4 space-y-8">
+
+
+                    <!-- Homework Widget -->
+                    <div id="student-homework-block" class="card hidden">
+                        <h4 class="card-title flex items-center gap-1.5 text-secondary">
+                            <span class="material-symbols-outlined">assignment</span> Assigned Homework
+                        </h4>
+                        <div id="student-homework-list" class="flex flex-col gap-3 mt-3">
+                            <!-- Populated dynamically in app.js -->
+                        </div>
+                    </div>
+
+                    <!-- Coaching Notes Widget -->
+                    <div id="student-coaching-notes-block" class="card hidden">
+                        <h4 class="card-title flex items-center gap-1.5 text-primary">
+                            <span class="material-symbols-outlined">description</span> Coach's Feedback & Notes
+                        </h4>
+                        <p id="student-coaching-notes-text" class="text-xs text-on-surface-variant font-body-md leading-relaxed mt-2 whitespace-pre-line"></p>
+                    </div>
+
+                    <!-- Daily Puzzle Widget -->
+                    <div id="daily-puzzle-block" class="card">
+                        <h4 class="card-title flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-secondary">extension</span> Daily Puzzle
+                        </h4>
+                        <div id="daily-puzzle-content" class="flex flex-col gap-2 mt-2">
+                            <span id="daily-puzzle-title" class="text-sm font-semibold text-on-surface">Loading today's puzzle...</span>
+                            <p id="daily-puzzle-desc" class="text-xs text-on-surface-variant font-body-md leading-relaxed"></p>
+                            <button data-action="startDailyPuzzle" id="daily-puzzle-btn" class="btn w-full py-2 bg-secondary text-on-secondary rounded-xl text-xs font-bold transition-all shadow hover:bg-secondary/90 flex items-center justify-center gap-1.5 mt-2">
+                                <span class="material-symbols-outlined text-sm">play_circle</span> Solve Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Coach Announcements Board -->
+                    <div id="coach-announcements-block" class="card">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="card-title mb-0 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-primary">campaign</span> Coach's Corner Announcements
+                            </h4>
+                            <button id="add-announcement-btn" data-action="openAnnouncementModal" class="hidden text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-1 rounded-lg font-bold hover:bg-primary/30 transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">add</span> Post
+                            </button>
+                        </div>
+                        <div id="announcements-list" class="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1">
+                            <span class="text-xs text-on-surface-variant italic">No announcements posted yet.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+
+
+        <!-- ============================================== -->
+        <!-- 4. CHESS GAME ARENA (2D/3D) TAB -->
+        <!-- ============================================== -->
+        <div id="chess-page" class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 max-w-[1400px] mx-auto">
+
+                <!-- Game Board Column -->
+                <div class="xl:col-span-8 flex flex-col items-center">
+
+                    <!-- Board Selector Navbar controls -->
+                    <div
+                        class="w-full flex items-center justify-between mb-6 bg-surface-container p-3 rounded-2xl border border-outline-variant/20 shadow-md">
+                        <div class="flex gap-2">
+                            <button id="btn-view-2d" data-action="toggleEngineView" data-arg="2D"
+                                class="px-6 py-2 bg-secondary text-on-secondary rounded-full text-sm font-bold shadow-lg shadow-secondary/15">2D
+                                Board</button>
+                            <button id="btn-view-3d" data-action="toggleEngineView" data-arg="3D"
+                                class="px-6 py-2 bg-surface-variant text-on-surface rounded-full text-sm font-bold border border-outline-variant hover:bg-surface-variant/85">3D
+                                Immersive</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button data-action="flipBoardView"
+                                class="p-2 bg-surface-variant hover:bg-surface-bright text-on-surface rounded-xl border border-outline-variant/30 transition-all"
+                                title="Flip Board">
+                                <span class="material-symbols-outlined text-xl">cached</span>
+                            </button>
+                            <button data-action="resetChessMatch"
+                                class="p-2 bg-surface-variant hover:bg-surface-bright text-red-400 rounded-xl border border-outline-variant/30 transition-all"
+                                title="Reset Game">
+                                <span class="material-symbols-outlined text-xl">restart_alt</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3D Camera Angle Selector (Shown only when in 3D mode) -->
+                    <div id="panel-3d-cameras"
+                        class="hidden w-full flex items-center gap-2 mb-6 bg-surface-container/60 p-2.5 rounded-2xl border border-outline-variant/15 shadow-sm justify-center">
+                        <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mr-2">3D Camera
+                            Angle:</span>
+                        <button id="btn-cam-player" data-action="changeCameraAngle" data-arg="player"
+                            class="px-4 py-1.5 bg-secondary/15 text-secondary border border-secondary/20 hover:bg-secondary/25 transition-all rounded-full text-xs font-semibold">Player
+                            Perspective</button>
+                        <button id="btn-cam-topdown" data-action="changeCameraAngle" data-arg="topdown"
+                            class="px-4 py-1.5 bg-surface-variant text-on-surface border border-outline-variant hover:bg-surface-bright transition-all rounded-full text-xs font-semibold">Top-Down
+                            View</button>
+                        <button id="btn-cam-orbital" data-action="changeCameraAngle" data-arg="orbital"
+                            class="px-4 py-1.5 bg-surface-variant text-on-surface border border-outline-variant hover:bg-surface-bright transition-all rounded-full text-xs font-semibold">Cinematic
+                            Angle</button>
+                    </div>
+
+                    <div class="flex gap-4 items-stretch justify-center w-full max-w-[700px]">
+                        <!-- Vertical Eval Bar -->
+                        <div id="arena-eval-bar-container" style="display: none !important;"
+                            class="w-6 bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30 flex flex-col justify-end relative shadow-lg">
+                            <div id="arena-eval-bar-black" class="w-full bg-[#1e232b] transition-all duration-300"
+                                style="height: 50%;"></div>
+                            <div id="arena-eval-bar-white" class="w-full bg-[#ffffff] transition-all duration-300"
+                                style="height: 50%;"></div>
+                            <span id="arena-eval-bar-text"
+                                class="absolute inset-x-0 top-2 text-[10px] font-bold text-center text-on-surface mix-blend-difference select-none">+0.0</span>
+                        </div>
+
+                        <!-- Outer Wrapper with coordinates -->
+                        <div class="flex flex-col flex-1 max-w-[640px]">
+                            <div class="flex items-center w-full">
+                                <!-- Left Rank Labels -->
+                                <div id="chess-board-ranks"
+                                    class="flex flex-col justify-around self-stretch w-6 text-center text-[11px] font-bold text-on-surface-variant pr-1.5 select-none opacity-80">
+                                </div>
+                                <!-- Chess Board Area -->
+                                <div class="flex-1 relative aspect-square">
+                                    <!-- 2D Chess Board container -->
+                                    <div id="chess-board-2d"
+                                        class="grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-outline-variant/50 shadow-2xl bg-surface-container-lowest">
+                                        <!-- Injected in chess-engine.js -->
+                                    </div>
+                                    <!-- 3D Chess Board container -->
+                                    <div id="chess-board-3d"
+                                        class="hidden w-full h-full rounded-xl overflow-hidden border border-outline-variant/50 shadow-2xl relative bg-black/40">
+                                        <!-- Canvas injected via Three.js in chess-engine.js -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Bottom File Labels -->
+                            <div id="chess-board-files"
+                                class="flex justify-around w-full pl-6 text-center text-[11px] font-bold text-on-surface-variant pt-2 select-none opacity-80">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Analytics Column -->
+                <div class="xl:col-span-4 space-y-8">
+                    <!-- Live Challenge Panel -->
+                    <div id="live-challenge-panel" class="glass-card rounded-2xl p-5 border border-emerald-500/25 space-y-3 bg-emerald-500/5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span class="text-xs font-bold text-on-surface uppercase tracking-wider">Live Challenge</span>
+                            </div>
+                            <button data-action="initLiveChallenge" title="Connect"
+                                class="text-[10px] px-2 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-500/30 transition-all font-bold">
+                                Connect
+                            </button>
+                        </div>
+                        <!-- Search Bar -->
+                        <div class="relative hidden" id="live-challenge-search-container">
+                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant/60">search</span>
+                            <input id="live-challenge-search-input" type="text" placeholder="Search online students..."
+                                class="w-full pl-7 pr-2.5 py-1 bg-surface-container-high border border-outline-variant/40 text-on-surface text-[10px] rounded-lg focus:outline-none focus:border-secondary transition-all" />
+                        </div>
+                        <!-- Online users -->
+                        <div id="live-challenge-users" class="space-y-2">
+                            <span class="text-xs text-on-surface-variant italic">Click Connect to see online students.</span>
+                        </div>
+                        <!-- Time control selector -->
+                        <div class="flex gap-1 flex-wrap">
+                            <span class="text-[10px] text-on-surface-variant font-bold block w-full mb-1">Time Control</span>
+                            <button data-action="setLiveClockLimit" data-arg="60" class="px-2 py-1 rounded-lg text-[10px] bg-surface-container-high border border-outline-variant text-on-surface hover:border-secondary transition-all">1 min</button>
+                            <button data-action="setLiveClockLimit" data-arg="180" class="px-2 py-1 rounded-lg text-[10px] bg-surface-container-high border border-outline-variant text-on-surface hover:border-secondary transition-all">3 min</button>
+                            <button data-action="setLiveClockLimit" data-arg="300" class="px-2 py-1 rounded-lg text-[10px] bg-secondary/20 border border-secondary/40 text-secondary font-bold transition-all">5 min</button>
+                            <button data-action="setLiveClockLimit" data-arg="600" class="px-2 py-1 rounded-lg text-[10px] bg-surface-container-high border border-outline-variant text-on-surface hover:border-secondary transition-all">10 min</button>
+                        </div>
+                        <!-- Live Chat -->
+                        <div class="hidden" id="live-chat-wrapper">
+                            <!-- Live Game active controls -->
+                            <div id="live-game-controls" class="flex gap-2 mb-3">
+                                <button data-action="resignLiveGame" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold hover:bg-red-500/20 transition-all flex items-center justify-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">flag</span> Resign Game
+                                </button>
+                            </div>
+                            <div id="live-chat-messages" class="h-24 overflow-y-auto flex flex-col gap-1 pr-1 text-xs"></div>
+                            <div class="flex gap-1 mt-2">
+                                <input id="live-chat-input" type="text" placeholder="Type a message..."
+                                    class="flex-1 bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-secondary transition-all">
+                                <button data-action="sendLiveChatMessage" class="px-2 py-1.5 bg-secondary text-on-secondary rounded-xl text-xs font-bold">
+                                    <span class="material-symbols-outlined text-sm">send</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arena Setup Card -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold">Arena
+                            Mode Setup</span>
+                        <div class="flex flex-col gap-3">
+                            <label for="arena-mode-select" class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Game Mode</label>
+                            <select id="arena-mode-select"
+                                class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-secondary transition-all">
+                                <option value="vs-computer">VS Computer (Minimax AI)</option>
+                                <option value="pass-play">Pass & Play (Local 2-Player)</option>
+                                <option value="review">Post-Game Review</option>
+                            </select>
+                        </div>
+
+                        <!-- Arena Difficulty (shown only for VS Computer mode) -->
+                        <div id="arena-difficulty-section" class="flex flex-col gap-2">
+                            <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">AI Difficulty</span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button id="btn-diff-easy" data-action="changeDifficulty" data-arg="easy"
+                                    class="py-2 rounded-xl text-xs font-semibold bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 transition-all hover:border-secondary">Easy</button>
+                                <button id="btn-diff-medium" data-action="changeDifficulty" data-arg="medium"
+                                    class="py-2 rounded-xl text-xs font-semibold bg-secondary/10 text-secondary border border-secondary/30 hover:bg-secondary/20 transition-all">Medium</button>
+                                <button id="btn-diff-hard" data-action="changeDifficulty" data-arg="hard"
+                                    class="py-2 rounded-xl text-xs font-semibold bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 transition-all hover:border-secondary">Hard</button>
+                            </div>
+                        </div>
+
+                        <!-- FEN/PGN Import/Export Buttons -->
+                        <div class="flex gap-2">
+                            <button data-action="openImportModal"
+                                class="flex-1 py-1.5 bg-surface-variant hover:bg-surface-bright border border-outline-variant/50 text-on-surface rounded-xl text-[10px] font-semibold flex items-center justify-center gap-1 transition-all">
+                                <span class="material-symbols-outlined text-xs">upload</span> Import FEN/PGN
+                            </button>
+                            <button data-action="exportCurrentPosition"
+                                class="flex-1 py-1.5 bg-surface-variant hover:bg-surface-bright border border-outline-variant/50 text-on-surface rounded-xl text-[10px] font-semibold flex items-center justify-center gap-1 transition-all">
+                                <span class="material-symbols-outlined text-xs">download</span> Export FEN/PGN
+                            </button>
+                        </div>
+
+                        <div id="arena-clock-selector-box" class="flex flex-col gap-3">
+                            <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Chess Clock Preset</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button data-action="selectClockPreset" data-arg="0"
+                                    class="clock-preset-btn py-2 bg-secondary text-on-secondary rounded-xl text-xs font-semibold transition-all">Untimed</button>
+                                <button data-action="selectClockPreset" data-arg="60"
+                                    class="clock-preset-btn py-2 bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 text-xs font-semibold rounded-xl transition-all">1m
+                                    Bullet</button>
+                                <button data-action="selectClockPreset" data-arg="180"
+                                    class="clock-preset-btn py-2 bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 text-xs font-semibold rounded-xl transition-all">3m
+                                    Blitz</button>
+                                <button data-action="selectClockPreset" data-arg="600"
+                                    class="clock-preset-btn py-2 bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 text-xs font-semibold rounded-xl transition-all">10m
+                                    Rapid</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Chess Clocks -->
+                    <div id="arena-clocks-card"
+                        class="hidden glass-card rounded-2xl p-6 border border-outline-variant/30 grid grid-cols-2 gap-4">
+                        <div id="clock-card-black"
+                            class="p-3 bg-black/60 rounded-xl border border-outline-variant/20 text-center transition-all duration-300">
+                            <span class="text-[10px] text-on-surface-variant font-bold uppercase block mb-1">Black
+                                (Opponent)</span>
+                            <span id="timer-txt-black"
+                                class="text-3xl font-display font-bold font-mono text-on-surface select-none">10:00</span>
+                        </div>
+                        <div id="clock-card-white"
+                            class="p-3 bg-secondary/10 rounded-xl border border-secondary/30 text-center transition-all duration-300">
+                            <span class="text-[10px] text-secondary font-bold uppercase block mb-1">White (You)</span>
+                            <span id="timer-txt-white"
+                                class="text-3xl font-display font-bold font-mono text-secondary select-none">10:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Post-Game Review Steps -->
+                    <div id="arena-review-card"
+                        class="hidden glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold">Review
+                            Navigation</span>
+                        <div class="flex gap-2">
+                            <button data-action="navigateReview" data-arg="first"
+                                class="flex-1 py-2 bg-surface-variant border border-outline-variant text-on-surface rounded-xl text-xs font-semibold hover:bg-surface-bright transition-all"
+                                title="First Move">
+                                <span class="material-symbols-outlined text-sm">first_page</span>
+                            </button>
+                            <button data-action="navigateReview" data-arg="prev"
+                                class="flex-1 py-2 bg-surface-variant border border-outline-variant text-on-surface rounded-xl text-xs font-semibold hover:bg-surface-bright transition-all"
+                                title="Previous Move">
+                                <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            </button>
+                            <button data-action="navigateReview" data-arg="next"
+                                class="flex-1 py-2 bg-surface-variant border border-outline-variant text-on-surface rounded-xl text-xs font-semibold hover:bg-surface-bright transition-all"
+                                title="Next Move">
+                                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            </button>
+                            <button data-action="navigateReview" data-arg="last"
+                                class="flex-1 py-2 bg-surface-variant border border-outline-variant text-on-surface rounded-xl text-xs font-semibold hover:bg-surface-bright transition-all"
+                                title="Last Move">
+                                <span class="material-symbols-outlined text-sm">last_page</span>
+                            </button>
+                        </div>
+                        <div class="text-center p-2 bg-background/50 border border-outline-variant/20 rounded-xl">
+                            <span id="arena-review-move-txt" class="text-xs font-semibold text-on-surface-variant">Move
+                                0 / 0</span>
+                        </div>
+
+                        <!-- Advantage graph container -->
+                        <div id="review-graph-card" class="mt-4 pt-4 border-t border-outline-variant/20">
+                            <span
+                                class="text-[10px] text-on-surface-variant uppercase tracking-wider block font-bold mb-2">Advantage
+                                Evaluation Graph</span>
+                            <div
+                                class="relative bg-background/50 border border-outline-variant/20 rounded-xl p-3 h-28 flex items-center justify-center overflow-hidden">
+                                <svg id="review-svg-graph" class="w-full h-full" viewBox="0 0 100 100"
+                                    preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="eval-gradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="rgba(16, 185, 129, 0.2)" />
+                                            <stop offset="50%" stop-color="rgba(255, 255, 255, 0)" />
+                                            <stop offset="100%" stop-color="rgba(239, 68, 68, 0.2)" />
+                                        </linearGradient>
+                                    </defs>
+                                    <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,0.15)"
+                                        stroke-width="1" stroke-dasharray="2,2" />
+                                    <!-- Dynamic elements injected in chess-engine.js -->
+                                </svg>
+                                <div id="review-graph-tooltip"
+                                    class="absolute hidden bg-surface-container-highest border border-outline-variant text-[10px] text-on-surface font-semibold px-2 py-1 rounded-md shadow-md pointer-events-none z-10">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status display -->
+                    <div class="glass-card rounded-xl p-3 border border-outline-variant/30 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-on-surface-variant uppercase tracking-wider block font-bold">Match
+                                Status</span>
+                            <div class="flex items-center gap-1.5">
+                                <span id="move-streak-badge" class="hidden px-2 py-0.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full font-bold text-[9px] animate-pulse">🔥 0 Streak</span>
+                                <span id="chess-status-badge"
+                                    class="px-2 py-0.5 bg-amber-500/20 text-secondary border border-secondary/30 rounded-full font-bold text-[10px]">In
+                                    Progress</span>
+                            </div>
+                        </div>
+                        <h4 id="chess-status" class="font-semibold text-on-surface text-xs font-body-md leading-snug">Your
+                            turn. Make a move!</h4>
+                        <div class="border-t border-outline-variant/20 pt-2">
+                            <span
+                                class="text-[10px] text-on-surface-variant block uppercase tracking-wider mb-1.5 font-bold">Engine
+                                Opponent</span>
+                            <div
+                                class="flex items-center gap-2 bg-background/50 border border-outline-variant/20 rounded-xl p-2">
+                                <span class="material-symbols-outlined text-secondary text-xl">smart_toy</span>
+                                <div class="text-left">
+                                    <span class="text-xs font-semibold text-on-surface block">Mind Square AI</span>
+                                    <span class="text-[10px] text-on-surface-variant block">Minimax alpha-beta</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Controls and Settings -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-6">
+                        <div>
+                            <span
+                                class="text-xs text-on-surface-variant block uppercase tracking-wider mb-3 font-bold">Arena
+                                Board Skin</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button data-action="changeBoardSkin" data-arg="green"
+                                    class="skin-btn py-2 rounded-xl text-xs font-semibold bg-secondary text-on-secondary border border-secondary/30 transition-all cursor-pointer">Classical
+                                    Green</button>
+                                <button data-action="changeBoardSkin" data-arg="wood"
+                                    class="skin-btn py-2 rounded-xl text-xs font-semibold bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 transition-all cursor-pointer">Wood</button>
+                                <button data-action="changeBoardSkin" data-arg="blue"
+                                    class="skin-btn py-2 rounded-xl text-xs font-semibold bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 transition-all cursor-pointer">Blue</button>
+                                <button data-action="changeBoardSkin" data-arg="pink"
+                                    class="skin-btn py-2 rounded-xl text-xs font-semibold bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 transition-all cursor-pointer">Pink</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span
+                                class="text-xs text-on-surface-variant block uppercase tracking-wider mb-3 font-bold">Audio Settings</span>
+                            <div class="flex items-center justify-between bg-surface-container-high p-3 rounded-xl border border-outline-variant/30">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-secondary">volume_up</span>
+                                    <span class="text-xs font-semibold text-on-surface">Sound Effects</span>
+                                </div>
+                                <button data-action="toggleArenaSound" id="arena-sound-toggle-btn"
+                                    class="px-4 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-bold transition-all shadow hover:bg-secondary/90">
+                                    Enabled
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span
+                                class="text-xs text-on-surface-variant block uppercase tracking-wider mb-3 font-bold">Arena
+                                Rewards</span>
+                            <p class="text-xs text-on-surface-variant leading-relaxed">
+                                Winning a match rewards you with <span class="text-secondary font-bold">+25-35 ELO
+                                    points</span>. Drawing grants <span class="text-primary font-bold">+5-10 ELO
+                                    points</span>. Defeats deduct <span class="text-red-400 font-bold">-10 ELO
+                                    points</span>. Points directly impact your Academy ranking badge!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ============================================== -->
+        <!-- 4.5 ONLINE CLASSES TAB -->
+        <!-- ============================================== -->
+        <div id="classes-page"
+            class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+            <!-- Header -->
+            <div class="mb-10 text-center md:text-left">
+                <span class="text-secondary font-bold text-xs uppercase tracking-widest block mb-2">Live
+                    Classrooms</span>
+                <h3 class="font-display-lg text-headline-lg text-primary">Interactive Online Classes</h3>
+                <p class="text-on-surface-variant text-sm mt-2 max-w-xl font-body-md">
+                    Attend daily live streams and interactive match analyses with elite fighters and grandmasters via
+                    Zoom. Class duration is exactly 1 hour.
+                </p>
+                <div class="h-1 w-24 bg-secondary mt-4"></div>
+            </div>
+
+            <!-- Countdown Alert Banner -->
+            <div
+                class="glass-card rounded-2xl p-6 border border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl">alarm</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold"
+                            id="class-countdown-label">Next Live Session Countdown</span>
+                        <h4 class="font-bold text-on-surface text-lg" id="class-countdown-title">Loading next session...
+                        </h4>
+                    </div>
+                </div>
+                <div
+                    class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/50 rounded-xl px-4 py-2 text-center">
+                    <span class="text-sm font-bold text-secondary font-mono" id="class-countdown-timer">00h 00m
+                        00s</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse ml-2"
+                        id="class-countdown-dot"></span>
+                </div>
+            </div>
+
+            <!-- Weekday navigation & Student Search -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                <div class="flex flex-wrap gap-2 justify-center md:justify-start" id="classes-day-tabs">
+                    <!-- Injected in app.js -->
+                </div>
+
+                <!-- Highlight Student Search -->
+                <div
+                    class="flex items-center gap-2 w-full md:w-auto md:min-w-[320px] bg-surface-container-high border border-outline-variant/30 rounded-full px-4 py-2 shadow-sm">
+                    <span class="material-symbols-outlined text-secondary text-lg">person_search</span>
+                    <input id="classes-student-search" type="text"
+                        placeholder="Search student to highlight name..." aria-label="Search student to highlight name"
+                        class="bg-transparent text-on-background placeholder-on-surface-variant/50 text-xs w-full focus:outline-none transition-all" />
+                </div>
+            </div>
+
+            <!-- Book a Demo Class Card (Classes Tab) — TOP of page -->
+            <div
+                class="mb-8 relative overflow-hidden rounded-3xl border border-secondary/30 bg-gradient-to-br from-surface-container via-surface-container to-background p-1 shadow-2xl">
+                <div class="rounded-[22px] overflow-hidden bg-surface-container relative">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-br from-secondary/10 via-transparent to-primary/5 pointer-events-none">
+                    </div>
+                    <div class="relative z-10 flex flex-col md:flex-row items-center gap-8 p-8 md:p-10">
+                        <div
+                            class="flex-shrink-0 w-16 h-16 rounded-2xl bg-secondary/15 border border-secondary/25 flex items-center justify-center shadow-lg">
+                            <span class="material-symbols-outlined text-secondary text-3xl"
+                                style="font-variation-settings:'FILL' 1">school</span>
+                        </div>
+                        <div class="flex-1 text-center md:text-left">
+                            <span class="text-secondary font-bold text-xs uppercase tracking-widest block mb-1">Free
+                                Trial — No Commitment</span>
+                            <h3 class="font-display-lg text-xl font-extrabold text-on-surface mb-2">Book a Free Demo
+                                Class</h3>
+                            <p class="font-body-md text-on-surface-variant text-xs max-w-xl">Not sure which class to
+                                join? Book a free 1-hour demo session with our FIDE-rated head coach. We'll confirm your
+                                slot via WhatsApp within 24 hours.</p>
+                            <div class="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
+                                <span
+                                    class="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-full text-xs font-semibold">✓
+                                    1-Hour Live Class</span>
+                                <span
+                                    class="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-full text-xs font-semibold">✓
+                                    FIDE Coach</span>
+                                <span
+                                    class="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-full text-xs font-semibold">✓
+                                    All Skill Levels</span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button data-action="openDemoModal" id="demo-btn-classes"
+                                class="px-6 py-3 bg-secondary text-on-secondary font-extrabold rounded-2xl shadow-lg hover:bg-secondary/90 hover:scale-105 transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 fill-current"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                </svg>
+                                Book a Demo Class
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Class Schedule Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="classes-grid-container">
+                <!-- Injected in app.js -->
+            </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TOURNAMENTS TAB -->
+        <!-- ============================================== -->
+        <div id="tournaments-page"
+            class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+            <!-- Header -->
+            <div class="mb-10 text-center md:text-left">
+                <span class="text-secondary font-bold text-xs uppercase tracking-widest block mb-2">Competitive
+                    Chess</span>
+                <h3 class="font-display-lg text-headline-lg text-primary">Academy & Global Tournaments</h3>
+                <p class="text-on-surface-variant text-sm mt-2 max-w-xl font-body-md">
+                    Test your skills against players worldwide in elite grandmaster tournaments, local club
+                    championships, and open Swiss chess tournaments.
+                </p>
+                <div class="h-1 w-24 bg-secondary mt-4"></div>
+            </div>
+
+            <!-- Academy Tournaments Section -->
+            <div class="mb-12 glass-card rounded-3xl p-8 border border-secondary/20 relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-primary/5 pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="material-symbols-outlined text-secondary">school</span>
+                                <h4 class="font-display-lg text-xl font-bold text-on-surface">Mind Square Academy Tournaments</h4>
+                            </div>
+                            <p class="text-xs text-on-surface-variant">Internal competitions run by Coach for Mind Square students.</p>
+                        </div>
+                        <button id="add-tournament-btn" data-action="openTournamentModal"
+                            class="hidden px-4 py-2 bg-gradient-to-r from-secondary to-primary text-on-secondary rounded-xl text-xs font-bold transition-all shadow-lg hover:scale-105 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">add_circle</span> Create Tournament
+                        </button>
+                    </div>
+                    <div id="academy-tournaments-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div class="col-span-full text-center py-8 text-on-surface-variant text-sm animate-pulse">Loading tournaments...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-3 mb-8">
+                <div class="flex-1 h-px bg-outline-variant/30"></div>
+                <span class="text-xs text-on-surface-variant uppercase tracking-widest font-bold">External Platforms</span>
+                <div class="flex-1 h-px bg-outline-variant/30"></div>
+            </div>
+
+            <!-- External Tournaments Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+                <!-- Chess.com Card -->
+                <div
+                    class="glass-card rounded-2xl overflow-hidden border border-outline-variant/30 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl duration-300 flex flex-col">
+                    <div class="relative h-48 md:h-56 overflow-hidden bg-surface-container-low">
+                        <img src="images/tournament_banner.png" alt="Chess.com Tournaments Banner"
+                            class="w-full h-full object-cover object-center" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent">
+                        </div>
+                    </div>
+                    <div
+                        class="p-6 md:p-8 text-center flex-1 flex flex-col justify-between items-center bg-surface-container/30 backdrop-blur-md">
+                        <div>
+                            <h4 class="font-display-lg text-xl md:text-2xl font-bold mb-3 text-primary">Discover
+                                Chess.com</h4>
+                            <p class="font-body-md text-on-surface-variant text-sm mb-6">
+                                Explore all live tournaments, arena events, daily brackets, and competitive matches.
+                                Click below to redirect to the official Chess.com tournaments dashboard and register.
+                            </p>
+                        </div>
+                        <a href="https://www.chess.com/tournaments/all" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-on-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 hover:scale-[1.03] transition-all rounded-full font-bold text-base cursor-pointer whitespace-nowrap">
+                            <span class="material-symbols-outlined font-bold">emoji_events</span>
+                            Browse Chess.com
+                            <span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lichess Card -->
+                <div
+                    class="glass-card rounded-2xl overflow-hidden border border-outline-variant/30 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl duration-300 flex flex-col">
+                    <div class="relative h-48 md:h-56 overflow-hidden bg-surface-container-low">
+                        <img src="images/lichess_tournament_banner.png" alt="Lichess Tournaments Banner"
+                            class="w-full h-full object-cover object-center" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent">
+                        </div>
+                    </div>
+                    <div
+                        class="p-6 md:p-8 text-center flex-1 flex flex-col justify-between items-center bg-surface-container/30 backdrop-blur-md">
+                        <div>
+                            <h4 class="font-display-lg text-xl md:text-2xl font-bold mb-3 text-primary">Explore Lichess
+                            </h4>
+                            <p class="font-body-md text-on-surface-variant text-sm mb-6">
+                                Join fast-paced Arena games, classic Swiss tournaments, and community-driven chess
+                                events. Play on the open-source server with global competitors.
+                            </p>
+                        </div>
+                        <a href="https://lichess.org/tournament" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-on-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 hover:scale-[1.03] transition-all rounded-full font-bold text-base cursor-pointer whitespace-nowrap">
+                            <span class="material-symbols-outlined font-bold">emoji_events</span>
+                            Browse Lichess
+                            <span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- World Chess Card -->
+                <div
+                    class="glass-card rounded-2xl overflow-hidden border border-outline-variant/30 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl duration-300 flex flex-col">
+                    <div class="relative h-48 md:h-56 overflow-hidden bg-surface-container-low">
+                        <img src="images/worldchess_banner.png" alt="World Chess Tournaments Banner"
+                            class="w-full h-full object-cover object-center" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent">
+                        </div>
+                    </div>
+                    <div
+                        class="p-6 md:p-8 text-center flex-1 flex flex-col justify-between items-center bg-surface-container/30 backdrop-blur-md">
+                        <div>
+                            <h4 class="font-display-lg text-xl md:text-2xl font-bold mb-3 text-primary">Explore World
+                                Chess</h4>
+                            <p class="font-body-md text-on-surface-variant text-sm mb-6">
+                                Participate in official FIDE-rated championships, prestigious Armageddon series, and
+                                competitive online qualifiers on the premium World Chess platform.
+                            </p>
+                        </div>
+                        <a href="https://worldchess.com/tournaments" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-on-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 hover:scale-[1.03] transition-all rounded-full font-bold text-base cursor-pointer whitespace-nowrap">
+                            <span class="material-symbols-outlined font-bold">emoji_events</span>
+                            Browse World Chess
+                            <span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Chess Gurukul Card -->
+                <div
+                    class="glass-card rounded-2xl overflow-hidden border border-outline-variant/30 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl duration-300 flex flex-col">
+                    <div class="relative h-48 md:h-56 overflow-hidden bg-surface-container-low">
+                        <img src="images/chessgurukul_banner.png" alt="Chess Gurukul Tournaments Banner"
+                            class="w-full h-full object-cover object-center" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent">
+                        </div>
+                    </div>
+                    <div
+                        class="p-6 md:p-8 text-center flex-1 flex flex-col justify-between items-center bg-surface-container/30 backdrop-blur-md">
+                        <div>
+                            <h4 class="font-display-lg text-xl md:text-2xl font-bold mb-3 text-primary">Chess Gurukul
+                            </h4>
+                            <p class="font-body-md text-on-surface-variant text-sm mb-6">
+                                Join training-focused tournaments, local matches, and grandmaster-led events hosted by
+                                one of the world's premier elite chess academies.
+                            </p>
+                        </div>
+                        <a href="https://chessgurukul.com/online-tournaments/" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-on-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 hover:scale-[1.03] transition-all rounded-full font-bold text-base cursor-pointer whitespace-nowrap">
+                            <span class="material-symbols-outlined font-bold">emoji_events</span>
+                            Browse Gurukul
+                            <span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Chessmii Card -->
+                <div
+                    class="glass-card rounded-2xl overflow-hidden border border-outline-variant/30 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl duration-300 flex flex-col">
+                    <div class="relative h-48 md:h-56 overflow-hidden bg-surface-container-low">
+                        <img src="images/chessmii_banner.png" alt="Chessmii Tournaments Banner"
+                            class="w-full h-full object-cover object-center" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent">
+                        </div>
+                    </div>
+                    <div
+                        class="p-6 md:p-8 text-center flex-1 flex flex-col justify-between items-center bg-surface-container/30 backdrop-blur-md">
+                        <div>
+                            <h4 class="font-display-lg text-xl md:text-2xl font-bold mb-3 text-primary">Discover
+                                Chessmii</h4>
+                            <p class="font-body-md text-on-surface-variant text-sm mb-6">
+                                Register for local open tournaments, check real-time pairings, find regional FIDE rated
+                                games, and connect with competitive players near you.
+                            </p>
+                        </div>
+                        <a href="https://chessmii.com" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-on-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 hover:scale-[1.03] transition-all rounded-full font-bold text-base cursor-pointer whitespace-nowrap">
+                            <span class="material-symbols-outlined font-bold">emoji_events</span>
+                            Browse Chessmii
+                            <span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ============================================== -->
+        <!-- 5. LEADERBOARD / SCORECARD TAB -->
+        <!-- ============================================== -->
+        <div id="leaderboard-page"
+            class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+
+            <!-- Podium Top 3 Rankings -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <!-- 2nd Place -->
+                <div id="podium-rank-2"
+                    class="glass-card rounded-2xl p-6 border border-outline-variant/30 flex flex-col items-center text-center relative overflow-hidden order-2 md:order-1 mt-0 md:mt-6">
+                    <div class="absolute top-2 left-2 text-2xl font-black text-slate-500/20">#2</div>
+                    <div
+                        class="absolute -right-6 -top-6 w-16 h-16 bg-slate-500/10 rounded-full flex items-center justify-center transform rotate-45">
+                        <span class="material-symbols-outlined text-slate-300 text-2xl">workspace_premium</span>
+                    </div>
+                    <img class="w-16 h-16 rounded-xl bg-surface-variant border border-slate-400/50 mb-3 object-cover"
+                        src="https://api.dicebear.com/7.x/bottts/svg?seed=Hikaru" />
+                    <h4 class="font-bold text-on-surface text-md leading-tight">Hikaru Nakamura</h4>
+                    <span class="text-xs text-on-surface-variant mb-3">MS-002</span>
+                    <span
+                        class="podium-category-badge px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-surface-container-highest text-primary border border-outline-variant/30 mb-4">Super
+                        Advanced</span>
+                    <span class="text-lg font-black text-slate-300">2,642 pts</span>
+                </div>
+                <!-- 1st Place -->
+                <div id="podium-rank-1"
+                    class="glass-card rounded-2xl p-6 border-2 border-secondary/50 flex flex-col items-center text-center relative overflow-hidden order-1 md:order-2 scale-100 md:scale-105 shadow-2xl glow-accent">
+                    <div class="absolute top-2 left-2 text-3xl font-black text-secondary/20">#1</div>
+                    <div
+                        class="absolute -right-6 -top-6 w-16 h-16 bg-amber-400/10 rounded-full flex items-center justify-center transform rotate-45">
+                        <span class="material-symbols-outlined text-amber-400 text-2xl">workspace_premium</span>
+                    </div>
+                    <img class="w-20 h-20 rounded-xl bg-surface-variant border-2 border-secondary mb-3 object-cover"
+                        src="https://api.dicebear.com/7.x/bottts/svg?seed=Magnus" />
+                    <h4
+                        class="font-bold text-on-surface text-lg leading-tight flex items-center gap-1.5 justify-center">
+                        Magnus Carlsen <span class="material-symbols-outlined text-secondary text-sm">verified</span>
+                    </h4>
+                    <span class="text-xs text-on-surface-variant mb-3">MS-001</span>
+                    <span
+                        class="podium-category-badge px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-secondary/20 text-secondary border border-secondary/20 mb-4">Super
+                        Advanced</span>
+                    <span class="text-xl font-black text-secondary">2,785 pts</span>
+                </div>
+                <!-- 3rd Place -->
+                <div id="podium-rank-3"
+                    class="glass-card rounded-2xl p-6 border border-outline-variant/30 flex flex-col items-center text-center relative overflow-hidden order-3 md:order-3 mt-0 md:mt-6">
+                    <div class="absolute top-2 left-2 text-2xl font-black text-amber-700/20">#3</div>
+                    <div
+                        class="absolute -right-6 -top-6 w-16 h-16 bg-amber-700/10 rounded-full flex items-center justify-center transform rotate-45">
+                        <span class="material-symbols-outlined text-amber-700 text-2xl">workspace_premium</span>
+                    </div>
+                    <img class="w-16 h-16 rounded-xl bg-surface-variant border border-amber-800/50 mb-3 object-cover"
+                        src="https://api.dicebear.com/7.x/bottts/svg?seed=Pragg" />
+                    <h4 class="font-bold text-on-surface text-md leading-tight">Viswanathan Anand</h4>
+                    <span class="text-xs text-on-surface-variant mb-3">MS-003</span>
+                    <span
+                        class="podium-category-badge px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-surface-container-highest text-primary border border-outline-variant/30 mb-4">Super
+                        Advanced</span>
+                    <span class="text-lg font-black text-amber-600">2,591 pts</span>
+                </div>
+            </div>
+
+            <!-- Birthday Greetings Section -->
+            <div id="leaderboard-birthdays-container" class="hidden mb-8"></div>
+
+            <!-- Scorecard Filters and List Container -->
+            <div class="glass-card rounded-2xl border border-outline-variant/30 overflow-hidden">
+                <div
+                    class="p-6 bg-surface-container border-b border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <h4 class="font-display-lg text-xl font-bold text-on-surface">Academy Scorecard</h4>
+
+                    <!-- Search inputs -->
+                    <div class="flex items-center gap-2 w-full md:w-auto max-w-sm">
+                        <span class="material-symbols-outlined text-on-surface-variant">search</span>
+                        <input id="leaderboard-search" type="text"
+                            placeholder="Search student name..." aria-label="Search student name"
+                            class="bg-white text-black placeholder-neutral-500 border border-outline-variant/50 rounded-full px-4 py-1.5 text-xs w-full focus:outline-none focus:border-secondary transition-all" />
+                    </div>
+                </div>
+
+                <!-- Table Rows -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-outline-variant/30 text-left">
+                        <thead
+                            class="bg-surface-container/50 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 text-center w-16">Rank</th>
+                                <th class="px-6 py-4">Student</th>
+                                <th class="px-6 py-4">Category</th>
+                                <th class="px-6 py-4">Badges</th>
+                                <th class="px-6 py-4 text-center w-24">ELO Score</th>
+                                <th class="px-6 py-4 text-center w-24">Games</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-rows" class="divide-y divide-outline-variant/10">
+                            <!-- Injected dynamically in app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 4.25 PUZZLES & TACTICS TRAINER TAB -->
+        <!-- ============================================== -->
+        <div id="puzzles-page" class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 max-w-[1400px] mx-auto">
+                <!-- Puzzles Board Column -->
+                <div class="xl:col-span-8 flex flex-col items-center">
+                    <div
+                        class="w-full flex items-center justify-between mb-6 bg-surface-container p-3 rounded-2xl border border-outline-variant/20 shadow-md">
+                        <div class="flex items-center gap-3">
+                            <span
+                                class="material-symbols-outlined text-secondary text-2xl animate-bounce">extension</span>
+                            <h3 class="font-display-lg text-lg font-bold text-primary">Tactics Board</h3>
+                        </div>
+                        <div class="flex gap-2">
+                            <button data-action="resetPuzzleMatch"
+                                class="p-2 bg-surface-variant hover:bg-surface-bright text-red-400 rounded-xl border border-outline-variant/30 transition-all"
+                                title="Reset Puzzle">
+                                <span class="material-symbols-outlined text-xl">restart_alt</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Outer Wrapper with coordinates -->
+                    <div class="w-full max-w-[640px] flex flex-col mx-auto">
+                        <div class="flex items-center w-full">
+                            <!-- Left Rank Labels -->
+                            <div id="puzzle-board-ranks"
+                                class="flex flex-col justify-around self-stretch w-6 text-center text-[11px] font-bold text-on-surface-variant pr-1.5 select-none opacity-80">
+                            </div>
+                            <!-- Puzzle Chess Board container -->
+                            <div id="puzzle-board"
+                                class="grid grid-cols-8 grid-rows-8 flex-1 aspect-square rounded-xl overflow-hidden border border-outline-variant/50 shadow-2xl bg-surface-container-lowest">
+                                <!-- Injected dynamically in chess-engine.js -->
+                            </div>
+                        </div>
+                        <!-- Bottom File Labels -->
+                        <div id="puzzle-board-files"
+                            class="flex justify-around w-full pl-6 text-center text-[11px] font-bold text-on-surface-variant pt-2 select-none opacity-80">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Puzzle details Column -->
+                <div class="xl:col-span-4 space-y-8">
+                    <!-- Status display -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span
+                                class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold">Puzzle
+                                Status</span>
+                            <span id="puzzle-status-badge"
+                                class="px-3 py-1 bg-amber-500/20 text-secondary border border-secondary/30 rounded-full font-bold text-xs">Unsolved</span>
+                        </div>
+                        <h4 id="puzzle-title" class="font-bold text-on-surface text-lg leading-snug">Elite Tactics
+                            Challenge</h4>
+                        <p id="puzzle-description" class="text-xs text-on-surface-variant leading-relaxed">
+                            Analyze the board positions and make the correct move. ELO points are dynamically rewarded
+                            on completion.
+                        </p>
+
+                        <div id="puzzle-hint-box" class="hidden p-3 bg-primary/10 border border-primary/20 rounded-xl">
+                            <span class="text-xs text-primary font-bold block uppercase tracking-wider mb-1">Clue
+                                Hint</span>
+                            <span id="puzzle-hint-txt" class="text-xs text-on-surface-variant">Checkmate is achievable
+                                using the Rook.</span>
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button data-action="togglePuzzleHint"
+                                class="flex-1 py-2 rounded-xl text-xs font-semibold bg-surface-container-high text-on-surface border border-outline-variant hover:bg-surface-variant/30 transition-all">Get
+                                a Hint</button>
+                        </div>
+                    </div>
+
+                    <!-- Puzzle Selector list -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span class="text-xs text-on-surface-variant block uppercase tracking-wider font-bold">Active
+                            Challenges</span>
+                        <div class="space-y-3 max-h-[400px] overflow-y-auto pr-1" id="puzzles-list-container">
+                            <!-- Injected dynamically in app.js -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 4.2 CUSTOM PUZZLE CREATOR TAB -->
+        <!-- ============================================== -->
+        <div id="puzzle-creator-page" class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 max-w-[1400px] mx-auto">
+                
+                <!-- Editor Board Column -->
+                <div class="xl:col-span-8 flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-6 bg-surface-container p-3 rounded-2xl border border-outline-variant/20 shadow-md">
+                        <div class="flex gap-2">
+                            <span class="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5 px-2">
+                                <span class="material-symbols-outlined">edit_square</span> Custom Puzzle Builder
+                            </span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button data-action="resetEditorBoard" data-arg="blank" class="px-3 py-1.5 bg-surface-variant hover:bg-surface-bright text-on-surface rounded-xl text-xs font-bold border border-outline-variant/30 transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">close</span> Clear Board
+                            </button>
+                            <button data-action="resetEditorBoard" data-arg="standard" class="px-3 py-1.5 bg-surface-variant hover:bg-surface-bright text-on-surface rounded-xl text-xs font-bold border border-outline-variant/30 transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">cached</span> Standard Layout
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Editor Board -->
+                    <div class="relative bg-surface-container border-2 border-outline-variant/40 rounded-2xl p-4 md:p-6 shadow-xl w-full max-w-[500px]">
+                        <!-- Ranks 1-8 -->
+                        <div class="absolute left-1 md:left-2 top-0 bottom-0 flex flex-col justify-around text-[10px] md:text-xs font-bold text-on-surface-variant/40 select-none py-4 md:py-6">
+                            <span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>
+                        </div>
+                        <div class="ml-4 md:ml-6 mb-2 md:mb-4">
+                            <!-- 8x8 Board grid -->
+                            <div id="editor-board-grid" class="grid grid-cols-8 grid-rows-8 gap-0 border border-outline-variant/40 aspect-square w-full font-bold">
+                                <!-- Generated dynamically in app.js -->
+                            </div>
+                        </div>
+                        <!-- Files A-H -->
+                        <div class="ml-4 md:ml-6 flex justify-around text-[10px] md:text-xs font-bold text-on-surface-variant/40 select-none px-2">
+                            <span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span>
+                        </div>
+                    </div>
+
+                    <!-- Piece Palette Selector -->
+                    <div class="w-full max-w-[500px] mt-6 p-4 bg-surface-container rounded-2xl border border-outline-variant/30 shadow-md">
+                        <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block mb-3 text-center">Piece Palette (Select piece to place, then click on the board)</span>
+                        <div class="flex flex-col gap-3">
+                            <!-- White Pieces Row -->
+                            <div class="flex justify-around items-center" id="editor-palette-white">
+                                <!-- Injected dynamically in app.js -->
+                            </div>
+                            <!-- Black Pieces Row -->
+                            <div class="flex justify-around items-center" id="editor-palette-black">
+                                <!-- Injected dynamically in app.js -->
+                            </div>
+                            <!-- Eraser / Action tools -->
+                            <div class="border-t border-outline-variant/20 pt-2 flex justify-center gap-4">
+                                <button id="palette-tool-eraser" data-action="selectPaletteTool" data-arg="eraser" class="px-4 py-1.5 bg-surface-variant text-on-surface rounded-xl text-xs font-bold border border-outline-variant/40 hover:bg-surface-bright transition-all flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">delete</span> Eraser
+                                </button>
+                                <button id="palette-tool-select" data-action="selectPaletteTool" data-arg="select" class="px-4 py-1.5 bg-secondary text-on-secondary rounded-xl text-xs font-bold border border-secondary/40 transition-all flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">back_hand</span> Inspect / Move
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Controls Column -->
+                <div class="xl:col-span-4 space-y-6">
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span class="text-xs text-secondary font-bold block uppercase tracking-wider">Puzzle Settings</span>
+
+                        <!-- Title -->
+                        <div class="space-y-1">
+                            <label for="editor-puzzle-title" class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Puzzle Title</label>
+                            <input id="editor-puzzle-title" type="text" placeholder="e.g. Back Rank Fork Tactic" class="w-full bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-secondary transition-all" />
+                        </div>
+
+                        <!-- Description -->
+                        <div class="space-y-1">
+                            <label for="editor-puzzle-desc" class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Description</label>
+                            <textarea id="editor-puzzle-desc" rows="3" placeholder="Explain the objective of this puzzle..." class="w-full bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-secondary transition-all font-body-md"></textarea>
+                        </div>
+
+                        <!-- Hint -->
+                        <div class="space-y-1">
+                            <label for="editor-puzzle-hint" class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Hint Text</label>
+                            <input id="editor-puzzle-hint" type="text" placeholder="e.g. Look at the weak f7 square" class="w-full bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-secondary transition-all" />
+                        </div>
+
+                        <!-- Reward Points -->
+                        <div class="space-y-1">
+                            <label for="editor-puzzle-reward" class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">ELO Point Reward</label>
+                            <input id="editor-puzzle-reward" type="number" min="5" max="100" value="15" class="w-full bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-secondary transition-all font-bold" />
+                        </div>
+
+                        <!-- Side to Move -->
+                        <div class="space-y-1">
+                            <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">Side to Move</span>
+                            <div class="flex gap-2">
+                                <button id="editor-turn-w" data-action="selectEditorTurn" data-arg="w" class="flex-1 py-2 bg-secondary text-on-secondary rounded-xl text-xs font-bold border border-secondary/40 transition-all">
+                                    White to Move
+                                </button>
+                                <button id="editor-turn-b" data-action="selectEditorTurn" data-arg="b" class="flex-1 py-2 bg-surface-container-high text-on-surface rounded-xl text-xs font-bold border border-outline-variant/30 transition-all">
+                                    Black to Move
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Solution inputs -->
+                        <div class="space-y-1">
+                            <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">Move Solution (e.g. d1-d8)</span>
+                            <div class="flex gap-2">
+                                <input id="editor-solution-from" type="text" maxlength="2" placeholder="From (e.g. d1)" aria-label="Solution starting square" class="w-1/2 bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-3 py-2 text-center focus:outline-none focus:border-secondary transition-all" />
+                                <input id="editor-solution-to" type="text" maxlength="2" placeholder="To (e.g. d8)" aria-label="Solution destination square" class="w-1/2 bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-3 py-2 text-center focus:outline-none focus:border-secondary transition-all" />
+                            </div>
+                        </div>
+
+                        <button data-action="publishCustomPuzzle" class="w-full py-3 bg-secondary text-on-secondary rounded-xl text-xs font-bold transition-all shadow-lg hover:bg-secondary/95 flex items-center justify-center gap-1.5 mt-2">
+                            <span class="material-symbols-outlined text-sm">publish</span> Publish Custom Puzzle
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 4.3 VISION COORDINATES TRAINER TAB -->
+        <!-- ============================================== -->
+        <div id="vision-trainer-page" class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 max-w-[1400px] mx-auto">
+                <!-- Board Column -->
+                <div class="xl:col-span-8 flex flex-col items-center">
+                    <div
+                        class="w-full flex items-center justify-between mb-6 bg-surface-container p-3 rounded-2xl border border-outline-variant/20 shadow-md">
+                        <span class="text-sm font-bold text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary">gps_fixed</span> Coordinates Vision
+                            Trainer
+                        </span>
+                        <div class="flex gap-2">
+                            <button id="btn-vision-start" data-action="startVisionSession"
+                                class="px-6 py-2 bg-secondary text-on-secondary rounded-full text-sm font-bold shadow-lg shadow-secondary/15 hover:scale-105 transition-all">Start
+                                Test</button>
+                            <button id="btn-vision-stop" data-action="stopVisionSession"
+                                class="hidden px-6 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-sm font-bold hover:bg-red-500/30 transition-all">Stop</button>
+                        </div>
+                    </div>
+
+                    <!-- Outer Wrapper with coordinates -->
+                    <div class="w-full max-w-[640px] flex flex-col mx-auto">
+                        <div class="flex items-center w-full">
+                            <!-- Left Rank Labels -->
+                            <div id="vision-board-ranks"
+                                class="flex flex-col justify-around self-stretch w-6 text-center text-[11px] font-bold text-on-surface-variant pr-1.5 select-none opacity-80">
+                            </div>
+                            <!-- Vision Interactive Clicking Chessboard -->
+                            <div id="vision-board"
+                                class="grid grid-cols-8 grid-rows-8 flex-1 aspect-square rounded-xl overflow-hidden border border-outline-variant/50 shadow-2xl bg-surface-container-lowest">
+                                <!-- Injected in chess-engine.js -->
+                            </div>
+                        </div>
+                        <!-- Bottom File Labels -->
+                        <div id="vision-board-files"
+                            class="flex justify-around w-full pl-6 text-center text-[11px] font-bold text-on-surface-variant pt-2 select-none opacity-80">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Column -->
+                <div class="xl:col-span-4 space-y-8">
+                    <!-- Session Status display -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold">Training
+                            Dashboard</span>
+
+                        <div
+                            class="flex flex-col items-center text-center p-6 bg-background/50 border border-outline-variant/20 rounded-xl relative overflow-hidden">
+                            <span class="text-xs text-on-surface-variant font-bold uppercase tracking-wider mb-2">Find
+                                Target Square</span>
+                            <span id="vision-target-txt"
+                                class="text-5xl font-extrabold text-secondary tracking-wide select-none">-</span>
+
+                            <!-- Progress timer bar -->
+                            <div class="w-full h-1 bg-surface-container mt-6 rounded-full overflow-hidden">
+                                <div id="vision-timer-bar" class="w-0 h-full bg-secondary transition-all duration-100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Metrics -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-background/50 border border-outline-variant/20 rounded-xl p-3 text-center">
+                                <span
+                                    class="text-[9px] text-on-surface-variant uppercase tracking-wider block">Score</span>
+                                <span id="vision-score-txt" class="text-xl font-bold text-primary">0</span>
+                            </div>
+                            <div class="bg-background/50 border border-outline-variant/20 rounded-xl p-3 text-center">
+                                <span class="text-[9px] text-on-surface-variant uppercase tracking-wider block">High
+                                    Score</span>
+                                <span id="vision-highscore-txt" class="text-xl font-bold text-emerald-400">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions Card -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span
+                            class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold font-body-md">How
+                            to Play</span>
+                        <p class="text-xs text-on-surface-variant leading-relaxed">
+                            Click on the chessboard squares corresponding to the coordinates displayed in the target
+                            card. You have <span class="text-secondary font-bold">30 seconds</span> to hit as many
+                            targets as you can! Avoid wrong clicks to maintain your streak.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- 4.4 OPENINGS EXPLORER TAB -->
+        <!-- ============================================== -->
+        <div id="openings-page" class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 max-w-[1400px] mx-auto">
+                <!-- Board Column -->
+                <div class="xl:col-span-8 flex flex-col items-center">
+                    <div
+                        class="w-full flex items-center justify-between mb-6 bg-surface-container p-3 rounded-2xl border border-outline-variant/20 shadow-md">
+                        <span class="text-sm font-bold text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary">menu_book</span> Openings Theory
+                            Explorer
+                        </span>
+                        <button data-action="resetOpeningExplorer"
+                            class="p-2 bg-surface-variant hover:bg-surface-bright text-red-400 rounded-xl border border-outline-variant/30 transition-all"
+                            title="Reset Board">
+                            <span class="material-symbols-outlined text-sm">restart_alt</span>
+                        </button>
+                    </div>
+
+                    <!-- Outer Wrapper with coordinates -->
+                    <div class="w-full max-w-[640px] flex flex-col mx-auto">
+                        <div class="flex items-center w-full">
+                            <!-- Left Rank Labels -->
+                            <div id="opening-board-ranks"
+                                class="flex flex-col justify-around self-stretch w-6 text-center text-[11px] font-bold text-on-surface-variant pr-1.5 select-none opacity-80">
+                            </div>
+                            <!-- Opening Board container -->
+                            <div id="opening-board"
+                                class="grid grid-cols-8 grid-rows-8 flex-1 aspect-square rounded-xl overflow-hidden border border-outline-variant/50 shadow-2xl bg-surface-container-lowest">
+                                <!-- Injected in chess-engine.js -->
+                            </div>
+                        </div>
+                        <!-- Bottom File Labels -->
+                        <div id="opening-board-files"
+                            class="flex justify-around w-full pl-6 text-center text-[11px] font-bold text-on-surface-variant pt-2 select-none opacity-80">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theory details Column -->
+                <div class="xl:col-span-4 space-y-8">
+                    <!-- Progress / Steps -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span
+                                class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold">Theory
+                                Setup</span>
+                            <span id="opening-step-badge"
+                                class="px-3 py-1 bg-secondary/15 text-secondary border border-secondary/30 rounded-full font-bold text-xs">Step
+                                1 / 4</span>
+                        </div>
+                        <h4 id="opening-title" class="font-bold text-on-surface text-lg leading-snug font-body-md">
+                            Sicilian Defense</h4>
+                        <p id="opening-description" class="text-xs text-on-surface-variant leading-relaxed">
+                            Standard opening strategy.
+                        </p>
+
+                        <!-- Square Hint Guidance -->
+                        <div class="p-3 bg-secondary/10 border border-secondary/20 rounded-xl">
+                            <span id="opening-hint-txt" class="text-xs text-secondary font-semibold">Move e2 to
+                                e4</span>
+                        </div>
+                    </div>
+
+                    <!-- Repertoire Actions -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span
+                            class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold">Repertoire
+                            & Training</span>
+                        <div class="flex flex-col gap-2">
+                            <button id="btn-train-memory" data-action="toggleOpeningMemoryTraining"
+                                class="w-full py-2.5 bg-secondary text-on-secondary font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 hover:scale-[1.02] transition-all duration-200 shadow-md shadow-secondary/15">
+                                <span class="material-symbols-outlined text-sm">psychology</span> Train Repertoire
+                                Memory
+                            </button>
+                            <button id="btn-custom-repertoire" data-action="startCustomRepertoireMode"
+                                class="w-full py-2.5 bg-surface-variant border border-outline-variant/50 text-on-surface font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 hover:bg-surface-bright transition-all duration-200">
+                                <span class="material-symbols-outlined text-sm">add_box</span> Build Custom Repertoire
+                            </button>
+                        </div>
+
+                        <!-- Custom Repertoire Input (Hidden initially) -->
+                        <div id="custom-repertoire-form"
+                            class="hidden space-y-3 pt-3 border-t border-outline-variant/20">
+                            <div class="flex flex-col gap-1.5">
+                                <label for="custom-repertoire-name"
+                                    class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Opening
+                                    Name</label>
+                                <input type="text" id="custom-repertoire-name"
+                                    class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2 w-full focus:outline-none focus:border-secondary transition-all"
+                                    placeholder="e.g. My Sicilian Defense">
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label for="custom-repertoire-desc"
+                                    class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Description</label>
+                                <textarea id="custom-repertoire-desc" rows="2"
+                                    class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2 w-full focus:outline-none focus:border-secondary transition-all"
+                                    placeholder="Enter custom opening description..."></textarea>
+                            </div>
+                            <div class="flex gap-2">
+                                <button data-action="saveCustomRepertoire"
+                                    class="flex-1 py-2 bg-emerald-500 text-white font-bold rounded-xl text-xs hover:scale-[1.02] transition-all">Save</button>
+                                <button data-action="cancelCustomRepertoireMode"
+                                    class="flex-1 py-2 bg-surface-variant border border-outline-variant text-on-surface rounded-xl text-xs transition-all">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opening Selector dictionary list -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span class="text-xs text-on-surface-variant block uppercase tracking-wider font-bold">Opening
+                            Dictionary</span>
+                        <div class="overflow-y-auto space-y-3 pr-1" id="openings-list-container"
+                            style="max-height: 340px; scrollbar-width: thin; scrollbar-color: var(--secondary, #a78bfa) transparent;">
+                            <!-- Injected dynamically in app.js -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- ============================================== -->
+        <!-- 4.6 ENDGAME TRAINER TAB -->
+        <!-- ============================================== -->
+        <div id="endgame-trainer-page" class="hidden min-h-screen pt-24 pb-16 px-margin-mobile md:px-margin-desktop">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 max-w-[1400px] mx-auto">
+                <!-- Board Column -->
+                <div class="xl:col-span-8 flex flex-col items-center">
+                    <div
+                        class="w-full flex items-center justify-between mb-6 bg-surface-container p-3 rounded-2xl border border-outline-variant/20 shadow-md">
+                        <span class="text-sm font-bold text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary">hotel_class</span> Endgame Trainer
+                        </span>
+                        <button data-action="resetEndgameTrainer"
+                            class="p-2 bg-surface-variant hover:bg-surface-bright text-red-400 rounded-xl border border-outline-variant/30 transition-all"
+                            title="Reset Board">
+                            <span class="material-symbols-outlined text-sm">restart_alt</span>
+                        </button>
+                    </div>
+
+                    <!-- Outer Wrapper with coordinates -->
+                    <div class="w-full max-w-[640px] flex flex-col mx-auto">
+                        <div class="flex items-center w-full">
+                            <!-- Left Rank Labels -->
+                            <div id="endgame-board-ranks"
+                                class="flex flex-col justify-around self-stretch w-6 text-center text-[11px] font-bold text-on-surface-variant pr-1.5 select-none opacity-80">
+                            </div>
+                            <!-- Endgame Board container -->
+                            <div id="endgame-board"
+                                class="grid grid-cols-8 grid-rows-8 flex-1 aspect-square rounded-xl overflow-hidden border border-outline-variant/50 shadow-2xl bg-surface-container-lowest">
+                                <!-- Injected dynamically in chess-engine.js -->
+                            </div>
+                        </div>
+                        <!-- Bottom File Labels -->
+                        <div id="endgame-board-files"
+                            class="flex justify-around w-full pl-6 text-center text-[11px] font-bold text-on-surface-variant pt-2 select-none opacity-80">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario details Column -->
+                <div class="xl:col-span-4 space-y-8">
+                    <!-- Status / Instructions -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-on-surface-variant uppercase tracking-wider block font-bold">Endgame Status</span>
+                            <span id="endgame-status-badge"
+                                class="px-3 py-1 bg-amber-500/20 text-secondary border border-secondary/30 rounded-full font-bold text-xs">Unsolved</span>
+                        </div>
+                        <h4 id="endgame-title" class="font-bold text-on-surface text-lg leading-snug">Opposition Basics</h4>
+                        <p id="endgame-instructions" class="text-xs text-on-surface-variant leading-relaxed">
+                            Analyze the endgame setup, then try to checkmate the computer or draw/defend the position!
+                        </p>
+                        <div id="endgame-feedback" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+                    </div>
+
+                    <!-- Scenario Selector -->
+                    <div class="glass-card rounded-2xl p-6 border border-outline-variant/30 space-y-4">
+                        <span class="text-xs text-on-surface-variant block uppercase tracking-wider font-bold">Select Endgame Category</span>
+                        <div class="flex flex-col gap-3">
+                            <select id="endgame-scenario-select"
+                                class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-secondary transition-all">
+                                <option value="kp-v-k">King & Pawn vs King (Key Squares)</option>
+                                <option value="kq-v-k">King & Queen vs King Mate</option>
+                                <option value="kr-v-k">King & Rook vs King Mate</option>
+                                <option value="opposition">Opposition Practice (K+P vs K)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Modal -->
+        <div id="dev-login-modal"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div
+                class="w-full max-w-sm glass-card rounded-2xl border border-outline-variant/40 p-8 flex flex-col gap-6 shadow-2xl relative text-center items-center justify-center">
+                <button data-action="closeLoginModal"
+                    class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-3xl text-secondary font-black">login</span>
+                </div>
+                <div>
+                    <h3 class="font-display-lg text-2xl font-bold text-on-background">Sign In</h3>
+                    <p class="text-xs text-on-surface-variant mt-2">Sign in to your Chess Academy account with Google.
+                    </p>
+                </div>
+
+                <!-- Google Login Container -->
+                <div class="w-full flex justify-center mt-2">
+                    <div id="google-login-btn-modal"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Create Announcement Modal -->
+        <div id="announcement-modal"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div class="w-full max-w-md glass-card rounded-2xl border border-outline-variant/40 p-6 flex flex-col gap-4 shadow-2xl relative">
+                <button data-action="closeAnnouncementModal" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <div class="text-center">
+                    <span class="material-symbols-outlined text-4xl text-primary mb-2">campaign</span>
+                    <h3 class="font-display-lg text-xl font-bold text-on-background">Post New Announcement</h3>
+                    <p class="text-xs text-on-surface-variant mt-1">This will be broadcast to all students on their dashboards.</p>
+                </div>
+                <div class="flex flex-col gap-3 mt-2">
+                    <input type="text" id="announcement-title-input" aria-label="Announcement Title" placeholder="Title (max 200 chars)" class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-secondary transition-all">
+                    <textarea id="announcement-body-input" aria-label="Announcement Content" rows="4" placeholder="Announcement content..." class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-secondary transition-all resize-none"></textarea>
+                    <label class="flex items-center gap-2 text-xs font-semibold text-on-surface cursor-pointer select-none">
+                        <input type="checkbox" id="announcement-pinned-input" class="rounded border-outline-variant bg-background text-secondary focus:ring-secondary">
+                        Pin to top
+                    </label>
+                    <button data-action="submitAnnouncement" class="btn w-full py-2.5 bg-secondary text-on-secondary rounded-xl text-xs font-bold transition-all shadow hover:bg-secondary/90 flex items-center justify-center gap-1.5 mt-2">
+                        <span class="material-symbols-outlined text-sm">send</span> Post Announcement
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Tournament Modal -->
+        <div id="tournament-modal"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div class="w-full max-w-md glass-card rounded-2xl border border-outline-variant/40 p-6 flex flex-col gap-4 shadow-2xl relative">
+                <button data-action="closeTournamentModal" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <div class="text-center">
+                    <span class="material-symbols-outlined text-4xl text-primary mb-2">emoji_events</span>
+                    <h3 class="font-display-lg text-xl font-bold text-on-background">Create Academy Tournament</h3>
+                    <p class="text-xs text-on-surface-variant mt-1">Setup a new in-academy competitive event.</p>
+                </div>
+                <div class="flex flex-col gap-3 mt-2">
+                    <input type="text" id="tournament-title-input" aria-label="Tournament Title" placeholder="Tournament Name (e.g. Summer Arena)" class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-secondary transition-all">
+                    <textarea id="tournament-desc-input" aria-label="Tournament Description" rows="3" placeholder="Description & rules..." class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-secondary transition-all resize-none"></textarea>
+                    <input type="text" id="tournament-date-input" aria-label="Tournament Date" placeholder="Start Date & Time (e.g. Next Saturday, 5 PM)" class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-secondary transition-all">
+                    <button data-action="submitTournament" class="btn w-full py-2.5 bg-secondary text-on-secondary rounded-xl text-xs font-bold transition-all shadow hover:bg-secondary/90 flex items-center justify-center gap-1.5 mt-2">
+                        <span class="material-symbols-outlined text-sm">emoji_events</span> Create Tournament
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Date of Birth Prompt Modal -->
+        <div id="dob-prompt-modal"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div
+                class="w-full max-w-md glass-card rounded-2xl border border-outline-variant/40 p-6 flex flex-col gap-6 shadow-2xl relative">
+                <div class="text-center">
+                    <span class="material-symbols-outlined text-4xl text-secondary mb-2">cake</span>
+                    <h3 class="font-display-lg text-2xl font-bold text-on-background">Date of Birth</h3>
+                    <p class="text-xs text-on-surface-variant mt-1">Please enter your date of birth to complete your
+                        profile registration and unlock rewards!</p>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider"
+                            for="dob-input">Your Date of Birth</label>
+                        <input id="dob-input" type="date" required
+                            class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-3 w-full focus:outline-none focus:border-secondary transition-all" />
+                    </div>
+                    <button data-action="submitDob"
+                        class="w-full py-3 bg-secondary text-on-secondary font-bold rounded-xl text-xs hover:scale-105 duration-200 transition-all shadow-lg shadow-secondary/10 mt-2">
+                        Save Date of Birth
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Birthday Celebration Modal -->
+        <div id="birthday-wish-modal"
+            class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div
+                class="w-full max-w-md glass-card rounded-2xl border border-secondary/50 p-8 flex flex-col gap-6 shadow-2xl relative text-center items-center justify-center">
+                <button data-action="closeBirthdayModal"
+                    class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mb-2 text-5xl">
+                    🎂
+                </div>
+                <div>
+                    <h3 id="birthday-title" class="font-display-lg text-2xl font-bold text-secondary">Wish you happy
+                        birthday, Player!</h3>
+                    <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">
+                        To celebrate your special day, the Chess Academy has credited <strong
+                            class="text-secondary">+1,000 points</strong> to your account! 🎁✨
+                    </p>
+                </div>
+                <button data-action="closeBirthdayModal"
+                    class="w-full py-3 bg-secondary text-on-secondary font-bold rounded-xl text-xs hover:scale-105 duration-200 transition-all shadow-lg shadow-secondary/15 mt-2">
+                    Awesome, Thank You!
+                </button>
+            </div>
+        </div>
+
+        <!-- PGN / FEN Import-Export Modal -->
+        <div id="pgn-fen-modal"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div
+                class="w-full max-w-md glass-card rounded-2xl border border-outline-variant/40 p-6 flex flex-col gap-4 shadow-2xl relative">
+                <button data-action="closeImportExportModal"
+                    class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <h3 id="pgn-fen-modal-title" class="font-bold text-on-surface text-lg">Import FEN / PGN</h3>
+
+                <div class="flex flex-col gap-2">
+                    <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Format</span>
+                    <div class="flex gap-2">
+                        <button id="btn-modal-format-fen" data-action="selectModalFormat" data-arg="FEN"
+                            class="flex-1 py-2 bg-secondary text-on-secondary rounded-xl text-xs font-semibold transition-all">FEN
+                            String</button>
+                        <button id="btn-modal-format-pgn" data-action="selectModalFormat" data-arg="PGN"
+                            class="flex-1 py-2 bg-surface-variant border border-outline-variant text-on-surface rounded-xl text-xs font-semibold hover:bg-surface-bright transition-all">PGN
+                            Moves</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label id="pgn-fen-input-label" for="pgn-fen-textarea"
+                        class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">FEN Data</label>
+                    <textarea id="pgn-fen-textarea" rows="4"
+                        class="bg-background border border-outline-variant/50 text-on-background text-xs rounded-xl px-4 py-3 w-full focus:outline-none focus:border-secondary transition-all font-mono"
+                        placeholder="Paste FEN string here..."></textarea>
+                </div>
+
+                <div class="flex gap-2 mt-2">
+                    <button id="btn-modal-action" data-action="applyModalImportExport"
+                        class="flex-1 py-3 bg-secondary text-on-secondary font-bold rounded-xl text-xs hover:scale-[1.02] duration-200 transition-all shadow-lg shadow-secondary/15">
+                        Load Position
+                    </button>
+                    <button id="btn-modal-copy" data-action="copyModalContent"
+                        class="hidden flex-1 py-3 bg-surface-variant border border-outline-variant text-on-surface font-bold rounded-xl text-xs hover:scale-[1.02] duration-200 transition-all">
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Tournament Spectator Modal -->
+        <div id="spectator-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+            <div class="glass-card w-full max-w-2xl rounded-3xl border border-outline-variant/30 overflow-hidden flex flex-col md:flex-row relative">
+                <!-- Close Button -->
+                <button data-action="closeSpectatorModal" class="absolute top-4 right-4 z-50 p-2 rounded-full bg-surface-container-high/40 text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+
+                <!-- Left Column: Board Canvas -->
+                <div class="p-6 flex flex-col items-center justify-center bg-background/50 border-r border-outline-variant/15">
+                    <!-- Black Player Banner -->
+                    <div class="flex items-center gap-2 mb-3 w-[260px] justify-between">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="text-xs">👤</span>
+                            <span id="spec-black-name" class="text-xs font-bold text-on-surface truncate">Black Player</span>
+                        </div>
+                        <span class="px-1.5 py-0.5 rounded bg-black border border-outline-variant/30 text-[9px] font-mono text-white">BLACK</span>
+                    </div>
+
+                    <!-- Canvas Wrapper -->
+                    <div class="relative p-2 rounded-2xl bg-surface-container/60 border border-outline-variant/20 shadow-xl">
+                        <canvas id="spectator-board-canvas" class="rounded-xl block max-w-full" style="width: 260px; height: 260px;"></canvas>
+                    </div>
+
+                    <!-- White Player Banner -->
+                    <div class="flex items-center gap-2 mt-3 w-[260px] justify-between">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="text-xs">👤</span>
+                            <span id="spec-white-name" class="text-xs font-bold text-secondary truncate">White Player</span>
+                        </div>
+                        <span class="px-1.5 py-0.5 rounded bg-white border border-outline-variant/30 text-[9px] font-mono text-black font-semibold">WHITE</span>
+                    </div>
+                </div>
+
+                <!-- Right Column: Sidebar (Moves, Info, Status) -->
+                <div class="p-6 flex-1 flex flex-col justify-between bg-surface-container-low/40">
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="font-display-lg text-lg font-extrabold text-on-surface mb-0.5">Live Spectator Room</h3>
+                            <p class="text-[10px] text-on-surface-variant font-bold">Academy Tournament Live Broadcast</p>
+                        </div>
+
+                        <!-- Status and Watcher Count -->
+                        <div class="flex items-center justify-between p-2 rounded-xl bg-surface-container border border-outline-variant/25">
+                            <div id="spec-status" class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                                🔴 Live
+                            </div>
+                            <div id="spec-watcher-count" class="text-[10px] text-on-surface-variant font-bold">
+                                0 watching
+                            </div>
+                        </div>
+
+                        <!-- Moves Log -->
+                        <div class="space-y-1.5">
+                            <span class="text-[9px] font-bold text-primary uppercase tracking-wider block">Game Notation</span>
+                            <div id="spec-move-list" class="h-32 overflow-y-auto p-3 rounded-xl bg-surface-container-low border border-outline-variant/15 flex flex-col gap-1.5 font-mono">
+                                <span class="text-[11px] text-on-surface-variant italic">No moves yet...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-2 mt-6">
+                        <button data-action="flipSpectatorBoard" class="flex-1 py-2 px-3 bg-surface-container-high border border-outline-variant rounded-xl text-xs font-bold text-on-surface hover:bg-surface-variant/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">cached</span> Flip Board
+                        </button>
+                        <button data-action="closeSpectatorModal" class="flex-1 py-2 px-3 bg-secondary text-on-secondary rounded-xl text-xs font-bold hover:bg-secondary/90 transition-all cursor-pointer">
+                            Exit Room
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book a Demo Class Modal Logic — loaded FIRST so it works even if other scripts fail -->
+        <script src="ui-demo-modal.js"></script>
+
+        <script src="ui-handlers.js"></script>
+
+        <!-- Link App Scripts -->
+        <script src="spectator.js"></script>
+        <script src="app.js"></script>
+        <script src="chess-engine.js"></script>
+
+</body>
+
+</html>
