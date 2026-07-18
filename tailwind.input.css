@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@source "./1.html";
+@source "./index.html";
 @source "./app.js";
 @source "./chess-engine.js";
 @source "./ui-handlers.js";

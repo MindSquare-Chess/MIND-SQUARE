@@ -2,7 +2,7 @@
   "name": "mindsquare-chess-academy",
   "version": "1.0.0",
   "description": "Mind Square Chess Academy & Interactive Engine Platform with 2D/3D board representation, Tactics Trainer, coordinates Vision Trainer, Openings Explorer, Pass-and-Play mode, and post-game move reviews.",
-  "main": "1.html",
+  "main": "index.html",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",

@@ -944,8 +944,8 @@ app.use((req, res, next) => {
         return next();
     }
 
-    // Resolve static file path (default to 1.html for root path /)
-    const relativePath = req.path === '/' ? '1.html' : req.path.substring(1);
+    // Resolve static file path (default to index.html for root path /)
+    const relativePath = req.path === '/' ? 'index.html' : req.path.substring(1);
     const filePath = path.resolve(__dirname, relativePath);
     if (!filePath.startsWith(path.resolve(__dirname))) {
         logSecurityEvent('WARN', 'PATH_TRAVERSAL_BLOCKED', req, { path: req.path });
@@ -991,7 +991,7 @@ app.use((req, res, next) => {
 
             let processed = content;
             let mime = 'text/plain';
-            const relativePath = req.path === '/' ? '1.html' : req.path.substring(1);
+            const relativePath = req.path === '/' ? 'index.html' : req.path.substring(1);
 
             if (ext === '.html' || req.path === '/') {
                 return serveProcessedHtml(content, res);
@@ -2763,19 +2763,19 @@ app.get('/api/me/role', authenticate, (req, res) => {
     res.json({ role: req.user.role, id: req.user.id });
 });
 
-// Catch-all route to serve 1.html for any frontend client-side routes (SPA redirect support)
+// Catch-all route to serve index.html for any frontend client-side routes (SPA redirect support)
 app.get('/*splat', (req, res) => {
     // If it's an API route that wasn't matched, send 404
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'API endpoint not found' });
     }
-    // Security: Do NOT serve 1.html for missing static files.
+    // Security: Do NOT serve index.html for missing static files.
     // If the request is for an asset (e.g. has a file extension like .png, .js, .css, .woff2, .ico), send 404.
     const ext = path.extname(req.path).toLowerCase();
     if (ext && ext !== '.html') {
         return res.status(404).send('Not Found');
     }
-    const filePath = path.join(__dirname, '1.html');
+    const filePath = path.join(__dirname, 'index.html');
     fs.readFile(filePath, 'utf8', (readErr, content) => {
         if (readErr) {
             return res.status(500).send('Failed to load application');
