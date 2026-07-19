@@ -23,7 +23,7 @@ RUN chown -R node:node /usr/src/app
 USER node
 
 # Expose the application port
-EXPOSE 3000
+EXPOSE 8080
 
 # Start the application
 CMD [ "node", "server.js" ]
