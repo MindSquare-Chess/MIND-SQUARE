@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 
 // Remove the 'Server' header that leaks Node.js/Express version information
 app.use((req, res, next) => { res.removeHeader('Server'); next(); });
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Trust exactly 1 proxy hop (e.g. Nginx/load balancer in front of Node).
 // Using 'true' would trust ALL X-Forwarded-For values, allowing IP spoofing to bypass rate limits.
