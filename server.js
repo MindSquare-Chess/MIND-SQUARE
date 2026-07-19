@@ -3223,7 +3223,7 @@ if (process.env.ENABLE_CLUSTER === 'true' && cluster.isPrimary) {
 } else {
     initDatabaseConnection().then(() => {
         setupDatabaseSchema().then(() => {
-            const serverInstance = app.listen(PORT, '0.0.0.0', () => {
+            const serverInstance = app.listen(PORT, () => {
                 const workerPrefix = cluster.isWorker ? `[Worker ${cluster.worker.id}] ` : '';
                 console.log(`${workerPrefix}Server is running on port ${PORT}`);
                 
